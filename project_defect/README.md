@@ -1,6 +1,6 @@
 ## 제품 불량 예측 프로젝트
 
-반도체 제조 공정에서 센서 데이터를 활용한 불량품 조기 탐지 시스템
+반도체 제조 공정에서 센서 데이터를 활용한 전통적 머신러닝 기반 불량품 조기 탐지 시스템
 
 ## 프로젝트 요약
 
@@ -13,94 +13,95 @@
 | 05_xgboost | 비교 실험 | Recall 38.10% |
 | 06_comparison | 최종 선택 | Random Forest |
 
-### 프로젝트 개요
-데이터셋: SECOM (반도체 제조 센서 데이터)
-샘플 수: 1,567개
-특성 수: 594개 (센서 590개 + 시간 4개)
-타겟: Pass/Fail (정상 93.4%, 불량 6.6%)
-목표: 불량품 조기 탐지로 고객 출하 전 차단
+## 프로젝트 개요
 
-### 주요 성과
-## 프로젝트 요약
+**데이터셋**: SECOM (반도체 제조 센서 데이터)
+- **샘플 수**: 1,567개
+- **특성 수**: 594개 (센서 590개 + 시간 4개)
+- **타겟**: Pass/Fail (정상 93.4%, 불량 6.6%)
+- **목표**: 불량품 조기 탐지로 고객 출하 전 차단
 
-| 지표 | 베이스라인 | 최종 모델 | 개선 |
-|------|------|------|
-| Recall | 19.05% | 57.14% | +38.09%p |
-| 불량 탐지 | 4개/21개 | 12개/21개 | +8개 |
+## 주요 성과
 
-**최종 선택 모델**: Random Forest (임계값 0.10)
+| 지표 | Logistic | Random Forest | XGBoost |
+|------|----------|---------------|---------|
+| **Accuracy** | 84.39% | **93.04%** | 92.41% |
+| **Precision** | 11.11% | **42.86%** | 33.33% |
+| **Recall** | 19.05% | **57.14%** | 38.10% |
+| **불량 탐지** | 4개/21개 | **12개/21개** | 8개/21개 |
 
-### 기술 스택
-언어: Python 3.x
-라이브러리: scikit-learn, pandas, numpy, matplotlib, seaborn
-모델: Logistic Regression, Random Forest, XGBoost
+### 핵심 성과
+- **불량 탐지율 3배 개선**: 19.05% → 57.14% (38.09%p 향상)
+- **놓침 최소화**: 21개 중 12개 탐지 (9개만 놓침)
+- **실용적 성능**: 임계값 조정으로 Recall 최적화
 
-### 프로젝트 구조
-project2_defect_prediction/
-├── researching/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_data_preprocessing.ipynb
-│   ├── 03_logistic_regression.ipynb
-│   ├── 04_random_forest.ipynb
-│   ├── 05_xgboost.ipynb
-│   └── 06_model_comparison.ipynb
-├── processed_data/
-│   ├── X_train.csv
-│   ├── X_test.csv
-│   ├── y_train.csv
-│   ├── y_test.csv
-│   └── *.pkl (모델 결과)
-└── README.md
+## 기술 스택
 
-### 실행 방법
-1. 환경 설정
-bash
-pip install pandas numpy scikit-learn matplotlib seaborn xgboost
-2. 데이터 준비
-Kaggle SECOM Dataset 다운로드
-secom.csv를 researching/ 폴더에 저장
-3. 순서대로 실행
-01_data_exploration.ipynb → 02_data_preprocessing.ipynb → 
-03~05 (모델 학습) → 06_model_comparison.ipynb
+### 데이터 처리
+- **Pandas, NumPy**: 센서 데이터 전처리, 결측값 처리
+- **Scikit-learn**: 데이터 정규화, 분할, 평가
 
-### 주요 분석 내용
-1. 데이터 탐색 (01번)
-클래스 불균형 확인 (93.4% vs 6.6%)
-결측치 4.52%
-상관관계 약함 (최고 0.156)
-비선형 모델 필요성 파악
-2. 전처리 (02번)
-결측치 중앙값 대체
-상수 특성 116개 제거
-시간 Feature 추가 (hour, dayofweek, time_gap)
-StandardScaler 적용
-최종 특성: 478개
-3. 모델 실험 (03~05번)
-Logistic Regression: Recall 19.05% (베이스라인)
-Random Forest: Recall 57.14% (최적)
-XGBoost: Recall 38.10% (과적합)
-4. 최종 선택 (06번)
-Random Forest 선택
-임계값 최적화 (F1 차이 0.05 이내면 Recall 우선)
-불량 21개 중 12개 탐지
+### 머신러닝 모델
+- **Scikit-learn**: Logistic Regression, Random Forest, XGBoost
+- **불균형 데이터**: SMOTE, 임계값 조정, 계층 분할
 
+### 시각화
+- **Matplotlib, Seaborn**: 성능 분석, 특성 중요도
+- **한글 지원**: Malgun Gothic 폰트
 
-### 핵심 발견
-시간 Feature의 효과
-시간 정보 없음: Recall 38.10%
-시간 정보 추가: Recall 57.14%
-개선: +19.04%p
-교대 근무, 설비 가동 패턴 등이 불량에 영향
+## 프로젝트 구조
 
-### 임계값 전략
-기본 임계값 (0.5): TP = 0 (불량 하나도 못 찾음)
-최적화 (0.10): TP = 12 (57% 탐지)
-불균형 데이터에서 임계값 조정 필수
+```
+project_defect/
+├── data/                    # 원본 센서 데이터
+├── processed_data/          # 전처리된 데이터
+│   ├── X_train.csv         # 훈련 특성 데이터
+│   ├── X_test.csv          # 테스트 특성 데이터
+│   ├── y_train.csv         # 훈련 라벨
+│   ├── y_test.csv          # 테스트 라벨
+│   └── scaler.pkl          # 정규화 스케일러
+├── models/                  # 학습된 모델
+│   ├── model_logistic.pkl  # 로지스틱 회귀
+│   ├── model_rf.pkl        # 랜덤 포레스트 ⭐
+│   ├── model_xgb.pkl       # XGBoost
+│   └── results_*.pkl       # 성능 메타데이터
+└── researching/             # 분석 노트북
+    ├── 01_data_exploration.ipynb
+    ├── 02_data_preprocessing.ipynb
+    ├── 03_logistic_regression.ipynb
+    ├── 04_random_forest.ipynb
+    ├── 05_xgboost.ipynb
+    └── 06_model_comparison.ipynb
+```
 
-### 모델 선택
-XGBoost > RF? → 데이터에 따라 다름
-이 데이터: RF가 XGB보다 우수
-이유: 샘플 적고 특성 많아 RF의 병렬 학습이 유리
+**특징**: 앙상블 방법으로 높은 일반화 성능과 안정성 확보
+## 실무 적용
+
+### 비즈니스 가치
+- **품질 보증**: 불량품 사전 감지로 고객 신뢰도 향상
+- **비용 절감**: 리콜 비용 및 클레임 처리 비용 최소화
+- **효율성**: 자동화된 품질 관리 시스템 구축
+
+### 배포 시나리오
+1. **인라인 검사**: 제조 라인에서 실시간 불량 감지
+2. **품질 관리**: 출하 전 최종 검증 단계 적용
+3. **공정 개선**: 불량 패턴 분석을 통한 제조 공정 최적화
+
+## 데이터 소스
+
+**원본 데이터**: [SECOM Dataset - Kaggle](https://www.kaggle.com/datasets/paresh2047/uci-semcom)
+
+## 핵심 발견
+
+### 시간 Feature의 효과
+- **시간 정보 없음**: Recall 38.10%
+- **시간 정보 추가**: Recall 57.14%
+- **개선도**: +19.04%p
+
+### 모델별 특성
+- **Logistic Regression**: 선형 관계 한계로 낮은 성능
+- **Random Forest**: 비선형 패턴 포착으로 최고 성능
+- **XGBoost**: 과적합 경향, 소규모 데이터셋 한계
 
 ### 한계 및 개선 방향
 현재 한계
@@ -116,15 +117,7 @@ Precision 26% (거짓 경보 많음)
 - 공정 파라미터
 - 원자재 정보
 
-### 실무 적용
-AI 1차 스크리닝 + 육안 2차 검사
-최종 탐지율 70%+ 예상
-
-### 비즈니스 가치
-불량품 조기 발견: 47% 개선 (17개 → 9개 출하)
-품질 비용 절감: 리콜, A/S 비용 감소
-브랜드 이미지: 고객 불만 감소
-
-### 참고 자료
-SECOM Dataset
-scikit-learn Documentation
+## 실행 방법
+1. 데이터 준비
+원본데이터를 project_defect/data 이하에 저장 (secom.csv로 파일명 변경)
+2. 순서대로 실행
