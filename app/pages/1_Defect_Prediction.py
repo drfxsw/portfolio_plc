@@ -22,8 +22,11 @@ st.set_page_config(
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
-# 경로 설정 (app 기준으로)
-model_path = "../project_defect/models/"
+# 경로 설정 (상대 경로)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.join(current_dir, "..", "..")
+model_path = os.path.join(project_root, "project_defect", "models")
+data_path = os.path.join(project_root, "project_defect", "processed_data")
 
 # 메인 타이틀
 st.title("제품 불량 예측 시스템")
@@ -145,9 +148,9 @@ with tab2:
     @st.cache_data
     def load_results():
         try:
-            results_logistic = joblib.load(model_path + 'results_logistic.pkl')
-            results_rf = joblib.load(model_path + 'results_rf.pkl') 
-            results_xgb = joblib.load(model_path + 'results_xgb.pkl')
+            results_logistic = joblib.load(os.path.join(model_path, 'results_logistic.pkl'))
+            results_rf = joblib.load(os.path.join(model_path, 'results_rf.pkl')) 
+            results_xgb = joblib.load(os.path.join(model_path, 'results_xgb.pkl'))
             return results_logistic, results_rf, results_xgb
         except Exception as e:
             st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
@@ -300,10 +303,10 @@ with tab3:
     @st.cache_resource
     def load_models():
         try:
-            model_logistic = joblib.load(model_path + 'model_logistic.pkl')
-            model_rf = joblib.load(model_path + 'model_rf.pkl') 
-            model_xgb = joblib.load(model_path + 'model_xgb.pkl')
-            scaler = joblib.load(model_path + 'scaler.pkl')
+            model_logistic = joblib.load(os.path.join(model_path, 'model_logistic.pkl'))
+            model_rf = joblib.load(os.path.join(model_path, 'model_rf.pkl')) 
+            model_xgb = joblib.load(os.path.join(model_path, 'model_xgb.pkl'))
+            scaler = joblib.load(os.path.join(model_path, 'scaler.pkl'))
             return model_logistic, model_rf, model_xgb, scaler
         except Exception as e:
             st.error(f"모델을 불러올 수 없습니다: {e}")
@@ -314,8 +317,8 @@ with tab3:
     def load_secom_data():
         try:
             # 전처리된 데이터 로드 (CSV 형식)
-            X_test = pd.read_csv('../project_defect/processed_data/X_test.csv')
-            y_test = pd.read_csv('../project_defect/processed_data/y_test.csv')
+            X_test = pd.read_csv(os.path.join(data_path, 'X_test.csv'))
+            y_test = pd.read_csv(os.path.join(data_path, 'y_test.csv'))
             
             # numpy array로 변환
             X_test = X_test.values
@@ -330,236 +333,216 @@ with tab3:
     X_test, y_test = load_secom_data()
     
     if all([model_logistic, model_rf, model_xgb, scaler]) and X_test is not None:
-        # 설정
-        st.subheader("예측 설정")
+        st.subheader("실시간 불량 예측 시뮬레이션")
+        st.markdown("**Test 데이터에서 한 샘플씩 가져와서 3개 모델로 예측해보세요!**")
         
-        col1, col2 = st.columns(2)
+        # 세션 상태 초기화
+        if 'current_sample_idx' not in st.session_state:
+            st.session_state.current_sample_idx = None
+        if 'current_data' not in st.session_state:
+            st.session_state.current_data = None
+        if 'prediction_done' not in st.session_state:
+            st.session_state.prediction_done = False
+        
+        # 1단계: 데이터 생성 버튼
+        col1, col2 = st.columns([3, 1])
         with col1:
-            n_samples = st.selectbox("샘플 개수 선택", [10, 20, 50], index=0)
-        with col2:
-            random_seed = st.number_input("랜덤 시드", value=42, min_value=0, max_value=9999)
+            if st.button("🎲 랜덤 센서 데이터 생성", use_container_width=True):
+                # 랜덤 샘플 선택
+                random_idx = np.random.choice(len(X_test))
+                st.session_state.current_sample_idx = random_idx
+                st.session_state.current_data = {
+                    'X': X_test[random_idx],
+                    'y_actual': y_test[random_idx]
+                }
+                st.session_state.prediction_done = False
+                st.rerun()
         
-        if st.button("실제 데이터 샘플링 및 예측 실행", use_container_width=True):
-            # 랜덤 샘플 선택
-            np.random.seed(random_seed)
-            sample_indices = np.random.choice(len(X_test), n_samples, replace=False)
+        with col2:
+            if st.session_state.current_sample_idx is not None:
+                st.info(f"샘플 #{st.session_state.current_sample_idx + 1}")
+        
+        # 2단계: 현재 데이터 표시
+        if st.session_state.current_data is not None:
+            st.markdown("---")
+            st.subheader("현재 센서 데이터")
             
-            X_samples = X_test[sample_indices]
-            y_actual = y_test[sample_indices]
+            # 데이터 미리보기
+            current_X = st.session_state.current_data['X']
             
-            st.success(f"Test 데이터에서 {n_samples}개 샘플 추출 완료!")
-            
-            # 입력 데이터 확인
-            with st.expander("입력 데이터 확인 (처음 5개 샘플, 처음 10개 특성)"):
-                # 데이터프레임으로 변환 (보기 편하게)
-                preview_df = pd.DataFrame(
-                    X_samples[:5, :10],  # 처음 5개 샘플, 처음 10개 특성
-                    columns=[f'Feature_{i+1}' for i in range(10)],
-                    index=[f'Sample_{i+1}' for i in range(5)]
-                )
-                st.dataframe(preview_df.style.format("{:.4f}"), use_container_width=True)
-                st.info(f"실제로는 {X_samples.shape[1]}개 특성이 모두 사용됩니다.")
-            
-            # 3개 모델로 예측
-            pred_logistic = model_logistic.predict(X_samples)
-            pred_rf = model_rf.predict(X_samples)
-            pred_xgb = model_xgb.predict(X_samples)
-            
-            # 예측 확률
-            prob_logistic = model_logistic.predict_proba(X_samples)[:, 1]
-            prob_rf = model_rf.predict_proba(X_samples)[:, 1] 
-            prob_xgb = model_xgb.predict_proba(X_samples)[:, 1]
-            
-            # 결과 데이터프레임 생성
-            results_df = pd.DataFrame({
-                'Sample_ID': [f'SAMPLE_{sample_indices[i]+1:04d}' for i in range(n_samples)],
-                'Actual_Label': ['불량' if y == 1 else '정상' for y in y_actual],
-                'Logistic_Pred': ['불량' if p == 1 else '정상' for p in pred_logistic],
-                'Logistic_Prob': prob_logistic,
-                'RF_Pred': ['불량' if p == 1 else '정상' for p in pred_rf],
-                'RF_Prob': prob_rf,
-                'XGB_Pred': ['불량' if p == 1 else '정상' for p in pred_xgb],
-                'XGB_Prob': prob_xgb
-            })
-            
-            # 정답 맞춤 여부 추가
-            results_df['Logistic_Correct'] = (pred_logistic == y_actual)
-            results_df['RF_Correct'] = (pred_rf == y_actual)
-            results_df['XGB_Correct'] = (pred_xgb == y_actual)
-            
-            # 결과 표시
-            st.subheader("예측 결과")
-            
-            # 요약 통계
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2 = st.columns([2, 1])
             
             with col1:
-                actual_defects = sum(y_actual)
-                st.metric("실제 불량", f"{actual_defects}개", 
-                         f"{actual_defects/n_samples*100:.1f}%")
+                # 특성 데이터를 표로 표시 (처음 20개만)
+                preview_df = pd.DataFrame({
+                    'Feature': [f'Feature_{i+1}' for i in range(20)],
+                    'Value': current_X[:20]
+                })
+                st.dataframe(
+                    preview_df.style.format({'Value': '{:.4f}'}),
+                    use_container_width=True,
+                    height=300
+                )
+                st.caption(f"💡 전체 {len(current_X)}개 특성 중 처음 20개만 표시")
             
             with col2:
-                n_defect_logistic = sum(pred_logistic)
-                accuracy_logistic = sum(pred_logistic == y_actual) / n_samples
-                st.metric("Logistic 예측", f"{n_defect_logistic}개", 
-                         f"정확도: {accuracy_logistic*100:.1f}%")
+                # 센서 데이터 요약 통계
+                st.metric("총 특성 수", f"{len(current_X)}개")
+                st.metric("평균값", f"{current_X.mean():.4f}")
+                st.metric("표준편차", f"{current_X.std():.4f}")
+                st.metric("최솟값", f"{current_X.min():.4f}")
+                st.metric("최댓값", f"{current_X.max():.4f}")
             
-            with col3:
-                n_defect_rf = sum(pred_rf)
-                accuracy_rf = sum(pred_rf == y_actual) / n_samples
-                st.metric("RF 예측", f"{n_defect_rf}개",
-                         f"정확도: {accuracy_rf*100:.1f}%")
+            # 3단계: 예측하기 버튼
+            st.markdown("---")
+            col1, col2 = st.columns([2, 1])
             
-            with col4:
-                n_defect_xgb = sum(pred_xgb)
-                accuracy_xgb = sum(pred_xgb == y_actual) / n_samples
-                st.metric("XGBoost 예측", f"{n_defect_xgb}개",
-                         f"정확도: {accuracy_xgb*100:.1f}%")
+            with col1:
+                if st.button("🔍 3개 모델로 예측 실행", use_container_width=True):
+                    st.session_state.prediction_done = True
+                    st.rerun()
             
-            # 상세 결과 테이블
-            st.subheader("상세 예측 결과")
+            with col2:
+                if not st.session_state.prediction_done:
+                    st.info("⬆️ 예측 버튼을 클릭하세요")
             
-            # 필터링 옵션
-            filter_option = st.radio(
-                "표시 옵션",
-                ["전체", "불량만", "오답만"],
-                horizontal=True
-            )
-            
-            if filter_option == "불량만":
-                mask = y_actual == 1
-                display_df = results_df[mask].copy()
-                st.write(f"**실제 불량 샘플: {len(display_df)}개**")
-            elif filter_option == "오답만":
-                mask = ~(results_df['Logistic_Correct'] | results_df['RF_Correct'] | results_df['XGB_Correct'])
-                display_df = results_df[mask].copy()
-                st.write(f"**3개 모델 모두 틀린 샘플: {len(display_df)}개**")
-            else:
-                display_df = results_df.copy()
-                st.write(f"**전체 샘플: {len(display_df)}개**")
-            
-            if len(display_df) > 0:
-                # 확률 기준으로 정렬
-                display_df = display_df.sort_values('RF_Prob', ascending=False)
+            # 4단계: 예측 결과 표시
+            if st.session_state.prediction_done:
+                st.markdown("---")
+                st.subheader("예측 결과")
                 
-                # 스타일 적용
-                def color_predictions(row):
-                    colors = []
-                    for col in row.index:
-                        if col == 'Actual_Label':
-                            if row[col] == '불량':
-                                colors.append('background-color: #ffe6e6; font-weight: bold')
-                            else:
-                                colors.append('background-color: #e6ffe6')
-                        elif col in ['Logistic_Pred', 'RF_Pred', 'XGB_Pred']:
-                            # 정답과 비교
-                            is_correct = row[col] == row['Actual_Label']
-                            if is_correct:
-                                colors.append('background-color: #ccffcc')  # 연한 초록
-                            else:
-                                colors.append('background-color: #ffcccc')  # 연한 빨강
-                        else:
-                            colors.append('')
-                    return colors
+                # 예측 실행
+                X_single = current_X.reshape(1, -1)
                 
-                styled_df = display_df.drop(columns=['Logistic_Correct', 'RF_Correct', 'XGB_Correct']).style.apply(
-                    color_predictions, axis=1
-                ).format({
-                    'Logistic_Prob': '{:.3f}',
-                    'RF_Prob': '{:.3f}',
-                    'XGB_Prob': '{:.3f}'
-                })
+                pred_logistic = model_logistic.predict(X_single)[0]
+                pred_rf = model_rf.predict(X_single)[0]
+                pred_xgb = model_xgb.predict(X_single)[0]
                 
-                st.dataframe(styled_df, use_container_width=True)
+                # 예측 확신도 (해당 예측이 맞을 확률)
+                def get_prediction_confidence(model, X, prediction, results):
+                    if prediction == 1:  # 불량으로 예측한 경우
+                        return results['precision']  # Precision: 불량 예측 중 실제 불량 비율
+                    else:  # 정상으로 예측한 경우
+                        # NPV (Negative Predictive Value): 정상 예측 중 실제 정상 비율
+                        # NPV = TN / (TN + FN)
+                        cm = np.array(results['confusion_matrix'])
+                        tn, fp, fn, tp = cm.ravel()
+                        npv = tn / (tn + fn) if (tn + fn) > 0 else 0
+                        return npv
                 
-                st.markdown("""
-                **색상 설명:**
-                - 초록색 배경: 정답
-                - 빨간색 배경: 오답
-                - Actual Label 진한 색: 실제 불량/정상
-                """)
+                # 각 모델의 예측 확신도 계산
+                confidence_logistic = get_prediction_confidence(model_logistic, X_single, pred_logistic, results_logistic)
+                confidence_rf = get_prediction_confidence(model_rf, X_single, pred_rf, results_rf)
+                confidence_xgb = get_prediction_confidence(model_xgb, X_single, pred_xgb, results_xgb)
                 
-                # CSV 다운로드
-                st.subheader("결과 다운로드")
+                y_actual = st.session_state.current_data['y_actual']
                 
-                csv = results_df.to_csv(index=False)
-                st.download_button(
-                    label="CSV 파일 다운로드",
-                    data=csv,
-                    file_name=f'defect_prediction_results_{n_samples}samples.csv',
-                    mime='text/csv',
-                    use_container_width=True
-                )
+                # 결과 표시
+                col1, col2, col3, col4 = st.columns(4)
                 
-                # 모델 비교 차트
-                st.subheader("모델 성능 비교")
+                with col1:
+                    if y_actual == 1:
+                        st.error("**실제 정답**")
+                        st.error("불량")
+                    else:
+                        st.success("**실제 정답**")
+                        st.success("정상")
                 
-                fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+                with col2:
+                    st.info("**Logistic Regression**")
+                    pred_text = "불량" if pred_logistic == 1 else "정상"
+                    is_correct = pred_logistic == y_actual
+                    if is_correct:
+                        st.success(f"{pred_text}")
+                        st.success(f"정답 확률: {confidence_logistic:.1%}")
+                    else:
+                        st.error(f"{pred_text}")
+                        st.error(f"정답 확률: {confidence_logistic:.1%}")
                 
-                # 1. 정확도 비교
-                ax = axes[0, 0]
+                with col3:
+                    st.info("**Random Forest**")
+                    pred_text = "불량" if pred_rf == 1 else "정상"
+                    is_correct = pred_rf == y_actual
+                    if is_correct:
+                        st.success(f"{pred_text}")
+                        st.success(f"정답 확률: {confidence_rf:.1%}")
+                    else:
+                        st.error(f"{pred_text}")
+                        st.error(f"정답 확률: {confidence_rf:.1%}")
+                
+                with col4:
+                    st.info("**XGBoost**")
+                    pred_text = "불량" if pred_xgb == 1 else "정상"
+                    is_correct = pred_xgb == y_actual
+                    if is_correct:
+                        st.success(f"{pred_text}")
+                        st.success(f"정답 확률: {confidence_xgb:.1%}")
+                    else:
+                        st.error(f"{pred_text}")
+                        st.error(f"정답 확률: {confidence_xgb:.1%}")
+                
+                # 모델 정확도 요약
+                st.markdown("---")
+                
+                correct_models = []
+                if pred_logistic == y_actual:
+                    correct_models.append("Logistic")
+                if pred_rf == y_actual:
+                    correct_models.append("Random Forest")
+                if pred_xgb == y_actual:
+                    correct_models.append("XGBoost")
+                
+                if len(correct_models) == 3:
+                    st.success(f"🎉 **모든 모델이 정답!** ({', '.join(correct_models)})")
+                elif len(correct_models) > 0:
+                    st.warning(f"**{len(correct_models)}개 모델 정답:** {', '.join(correct_models)}")
+                else:
+                    st.error("**모든 모델이 틀렸습니다!**")
+                
+                # 확률 비교 차트
+                st.subheader("모델별 예측 정답 확률 비교")
+                
+                fig, ax = plt.subplots(figsize=(10, 6))
+                
                 models = ['Logistic', 'Random Forest', 'XGBoost']
-                accuracies = [accuracy_logistic, accuracy_rf, accuracy_xgb]
+                probs = [confidence_logistic, confidence_rf, confidence_xgb]
+                predictions = [pred_logistic, pred_rf, pred_xgb]
                 
-                bars = ax.bar(models, accuracies, color=['skyblue', 'lightgreen', 'orange'])
-                ax.set_title('모델별 정확도', fontweight='bold')
-                ax.set_ylabel('Accuracy')
+                # 막대 색깔 (정답이면 초록, 틀리면 빨강)
+                colors = []
+                for pred in predictions:
+                    if pred == y_actual:
+                        colors.append('lightgreen')
+                    else:
+                        colors.append('lightcoral')
+                
+                bars = ax.bar(models, probs, color=colors, alpha=0.7)
+                ax.axhline(y=0.8, color='orange', linestyle='--', alpha=0.7, label='우수 기준 (80%)')
                 ax.set_ylim(0, 1)
+                ax.set_ylabel('예측 정답 확률')
+                ax.set_title('모델별 예측 정답 확률 비교', fontweight='bold')
                 ax.grid(True, alpha=0.3, axis='y')
-                
-                for bar, acc in zip(bars, accuracies):
-                    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                           f'{acc*100:.1f}%', ha='center', va='bottom', fontweight='bold')
-                
-                # 2. 불량 예측 개수
-                ax = axes[0, 1]
-                defect_counts = [actual_defects, n_defect_logistic, n_defect_rf, n_defect_xgb]
-                labels = ['실제', 'Logistic', 'RF', 'XGBoost']
-                colors_bar = ['red', 'skyblue', 'lightgreen', 'orange']
-                
-                bars = ax.bar(labels, defect_counts, color=colors_bar)
-                ax.set_title('불량 예측 개수 비교', fontweight='bold')
-                ax.set_ylabel('개수')
-                ax.grid(True, alpha=0.3, axis='y')
-                
-                for bar, count in zip(bars, defect_counts):
-                    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.2,
-                           f'{count}개', ha='center', va='bottom', fontweight='bold')
-                
-                # 3. 확률 분포
-                ax = axes[1, 0]
-                ax.hist(prob_logistic, alpha=0.5, label='Logistic', bins=20)
-                ax.hist(prob_rf, alpha=0.5, label='Random Forest', bins=20)  
-                ax.hist(prob_xgb, alpha=0.5, label='XGBoost', bins=20)
-                ax.set_title('불량 확률 분포', fontweight='bold')
-                ax.set_xlabel('불량 확률')
-                ax.set_ylabel('빈도')
                 ax.legend()
-                ax.axvline(x=0.5, color='red', linestyle='--', alpha=0.7, label='임계값')
-                ax.grid(True, alpha=0.3)
                 
-                # 4. Confusion Matrix (RF만)
-                ax = axes[1, 1]
-                cm = confusion_matrix(y_actual, pred_rf)
-                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                           xticklabels=['정상', '불량'],
-                           yticklabels=['정상', '불량'],
-                           ax=ax, cbar=True, annot_kws={'size': 14})
-                ax.set_title('Random Forest Confusion Matrix', fontweight='bold')
-                ax.set_xlabel('예측')
-                ax.set_ylabel('실제')
+                # 막대 위에 확률 표시
+                for bar, prob in zip(bars, probs):
+                    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
+                           f'{prob:.1%}', ha='center', va='bottom', fontweight='bold')
                 
                 plt.tight_layout()
                 st.pyplot(fig)
-            
-            else:
-                st.info("표시할 샘플이 없습니다.")
+                
+                st.info("💡 **다른 샘플을 테스트하려면 위의 '랜덤 센서 데이터 생성' 버튼을 다시 클릭하세요!**")
+        
+        else:
+            st.info("👆 **'랜덤 센서 데이터 생성' 버튼을 클릭해서 시작하세요!**")
+
     
     else:
         st.error("필요한 파일들을 확인해주세요:")
         st.code("""
-            필요 파일:
-            - project_defect/models/model_*.pkl
-            - project_defect/processed_data/X_test.pkl
-            - project_defect/processed_data/y_test.pkl
-                    """)
+        필요 파일:
+        - project_defect/models/model_*.pkl
+        - project_defect/processed_data/X_test.csv
+        - project_defect/processed_data/y_test.csv
+        """)
