@@ -62,7 +62,7 @@ project_defect/
 │   └── scaler.pkl          # 정규화 스케일러
 ├── models/                  # 학습된 모델
 │   ├── model_logistic.pkl  # 로지스틱 회귀
-│   ├── model_rf.pkl        # 랜덤 포레스트 ⭐
+│   ├── model_rf.pkl        # 랜덤 포레스트
 │   ├── model_xgb.pkl       # XGBoost
 │   └── results_*.pkl       # 성능 메타데이터
 └── researching/             # 분석 노트북
