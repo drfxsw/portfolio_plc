@@ -31,7 +31,6 @@ data_path = os.path.join(project_root, "project_defect", "processed_data")
 # 메인 타이틀
 st.title("제품 불량 예측 시스템")
 st.markdown("**반도체 제조 공정 센서 데이터 기반 불량품 조기 탐지**")
-st.markdown("---")
 
 # 탭 생성
 tab1, tab2, tab3 = st.tabs(["프로젝트 정보", "성능 분석", "End-to-End 시스템"])
@@ -47,7 +46,7 @@ with tab1:
         st.markdown("""
         - **목적**: 반도체 제조 공정에서 불량품 조기 탐지
         - **데이터**: SECOM 센서 데이터 (UCI Repository)
-        - **방법**: 전통적 머신러닝 모델 비교
+        - **방법**: 머신러닝 모델 비교
         - **핵심**: Recall 최대화 (불량품 놓치지 않기)
         """)
         
@@ -333,9 +332,7 @@ with tab3:
     X_test, y_test = load_secom_data()
     
     if all([model_logistic, model_rf, model_xgb, scaler]) and X_test is not None:
-        st.subheader("실시간 불량 예측 시뮬레이션")
-        st.markdown("**Test 데이터에서 한 샘플씩 가져와서 3개 모델로 예측해보세요!**")
-        
+        st.subheader("불량 예측 시뮬레이션")
         # 세션 상태 초기화
         if 'current_sample_idx' not in st.session_state:
             st.session_state.current_sample_idx = None
@@ -345,9 +342,11 @@ with tab3:
             st.session_state.prediction_done = False
         
         # 1단계: 데이터 생성 버튼
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            if st.button("🎲 랜덤 센서 데이터 생성", use_container_width=True):
+        col1, col2, col3 = st.columns([3, 1, 1])
+        with col1: 
+            st.markdown("**Test 데이터에서 한 샘플씩 가져와서 3개 모델로 예측해보기**")
+        with col2:
+            if st.button("랜덤 센서 데이터 생성", use_container_width=True):
                 # 랜덤 샘플 선택
                 random_idx = np.random.choice(len(X_test))
                 st.session_state.current_sample_idx = random_idx
@@ -358,7 +357,7 @@ with tab3:
                 st.session_state.prediction_done = False
                 st.rerun()
         
-        with col2:
+        with col3:
             if st.session_state.current_sample_idx is not None:
                 st.info(f"샘플 #{st.session_state.current_sample_idx + 1}")
         
@@ -383,7 +382,7 @@ with tab3:
                     use_container_width=True,
                     height=300
                 )
-                st.caption(f"💡 전체 {len(current_X)}개 특성 중 처음 20개만 표시")
+                st.caption(f"전체 {len(current_X)}개 특성 중 처음 20개만 표시")
             
             with col2:
                 # 센서 데이터 요약 통계
@@ -395,16 +394,9 @@ with tab3:
             
             # 3단계: 예측하기 버튼
             st.markdown("---")
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                if st.button("🔍 3개 모델로 예측 실행", use_container_width=True):
+            if st.button("3개 모델로 예측 실행", use_container_width=True):
                     st.session_state.prediction_done = True
                     st.rerun()
-            
-            with col2:
-                if not st.session_state.prediction_done:
-                    st.info("⬆️ 예측 버튼을 클릭하세요")
             
             # 4단계: 예측 결과 표시
             if st.session_state.prediction_done:
@@ -493,7 +485,7 @@ with tab3:
                     correct_models.append("XGBoost")
                 
                 if len(correct_models) == 3:
-                    st.success(f"🎉 **모든 모델이 정답!** ({', '.join(correct_models)})")
+                    st.success(f"**모든 모델이 정답!** ({', '.join(correct_models)})")
                 elif len(correct_models) > 0:
                     st.warning(f"**{len(correct_models)}개 모델 정답:** {', '.join(correct_models)}")
                 else:
@@ -531,11 +523,9 @@ with tab3:
                 
                 plt.tight_layout()
                 st.pyplot(fig)
-                
-                st.info("💡 **다른 샘플을 테스트하려면 위의 '랜덤 센서 데이터 생성' 버튼을 다시 클릭하세요!**")
         
         else:
-            st.info("👆 **'랜덤 센서 데이터 생성' 버튼을 클릭해서 시작하세요!**")
+            st.info("**버튼을 클릭해서 테스트용 데이터 생성**")
 
     
     else:

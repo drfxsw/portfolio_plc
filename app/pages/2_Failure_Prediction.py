@@ -480,7 +480,7 @@ with tab3:
                 plt.tight_layout()
                 st.pyplot(fig)
                 
-                st.info(f"💡 32개 특성 중 처음 8개만 표시했습니다. 실제로는 {n_features}개 특성이 모두 사용됩니다.")
+                st.info(f"32개 특성 중 처음 8개만 표시했습니다. 실제로는 {n_features}개 특성이 모두 사용됩니다.")
                 
                 # CSV 다운로드
                 st.subheader("결과 다운로드")
