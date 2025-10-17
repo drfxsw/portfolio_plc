@@ -21,12 +21,22 @@ import os
 import base64
 import os
 import time
+import sys
+
+# 스타일 유틸리티 import
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from utils.styles import load_common_styles, create_page_header, create_metric_cards, COLORS, CHART_COLORS
 
 # 페이지 설정
 st.set_page_config(
-    page_title="장비 고장 예측 시스템",
-    layout="wide"
+    page_title="Failure Prediction System",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# 공통 스타일 로드 및 페이지 헤더
+load_common_styles()
+create_page_header("Deep Learning Failure Prediction", "Predictive Maintenance with LSTM")
 
 # 한글 폰트 설정
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -37,9 +47,6 @@ model_path = "../project_failure/models/"
 
 # 메인 타이틀
 st.title("장비 고장 예측 시스템")
-st.markdown("**시계열 센서 데이터 기반 장비 고장 예측 (Deep Learning)**")
-st.markdown("---")
-
 # 탭 생성
 tab1, tab2, tab3 = st.tabs(["프로젝트 정보", "성능 분석", "End-to-End 시스템"])
 

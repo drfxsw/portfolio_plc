@@ -14,12 +14,21 @@ from sklearn.metrics import confusion_matrix, classification_report
 import io
 import base64
 import os
+import sys
+
+# 스타일 유틸리티 import
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from utils.styles import load_common_styles, create_page_header, create_metric_cards, COLORS, CHART_COLORS
 
 # 페이지 설정
 st.set_page_config(
-    page_title="제품 불량 예측 시스템",
-    layout="wide"
+    page_title="Defect Prediction System",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
+
+# 공통 스타일 로드
+load_common_styles()
 
 # 한글 폰트 설정
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -31,9 +40,11 @@ project_root = os.path.join(current_dir, "..", "..")
 model_path = os.path.join(project_root, "project_defect", "models")
 data_path = os.path.join(project_root, "project_defect", "processed_data")
 
-# 메인 타이틀
-st.title("제품 불량 예측 시스템")
-st.markdown("**반도체 제조 공정 센서 데이터 기반 불량품 조기 탐지**")
+# 페이지 헤더
+create_page_header(
+    "Product Defect Detection",
+    "반도체 제조 공정 센서 데이터 기반 불량품 조기 탐지 (Machine Learning)"
+)
 
 # 탭 생성
 tab1, tab2, tab3 = st.tabs(["프로젝트 정보", "성능 분석", "End-to-End 시스템"])
