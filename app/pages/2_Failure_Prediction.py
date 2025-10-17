@@ -333,7 +333,7 @@ with tab2:
    # ========================= TAB 3: End-to-End 시스템 =========================
 with tab3:
     st.header("End-to-End 고장 예측 시스템")
-    st.markdown("가상 베어링 데이터를 생성하고 실시간으로 고장을 예측합니다.")
+    st.markdown("가상 베어링 데이터를 생성하고 고장시점을 예측합니다.")
     
     # 모델 로드 함수
     @st.cache_resource
@@ -359,14 +359,14 @@ with tab3:
         st.markdown("---")
         
         # 사용자 입력
-        st.subheader("1. 시뮬레이션 설정")
+        st.subheader("시뮬레이션 데이터 설정")
         
         col1, col2 = st.columns([3, 1])
         
         with col1:
             failure_day = st.slider(
                 "고장 발생 시점 (일)",
-                min_value=1,
+                min_value=5,
                 max_value=30,
                 value=25,
                 step=1,
@@ -522,7 +522,7 @@ with tab3:
             
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
-                predict_btn = st.button("예측하기", type="secondary", use_container_width=True)
+                predict_btn = st.button("3개 모델로 예측 실행", use_container_width=True)
             
             # 예측 실행
             if predict_btn:
@@ -859,11 +859,12 @@ with tab3:
             
             st.plotly_chart(fig, use_container_width=True)
             
-            st.info(f"설명: 윈도우 크기 10으로 인해 처음 10개 시점은 예측 불가합니다. "
+            st.info(
                    f"일별 288개 측정 중 고장 신호 비율로 평균을 계산했습니다. "
                    f"배경색: 주의(노랑), 경고(주황), 위험(빨강). "
-                   f"고장 징후는 {data['failure_warning_start_day']}일부터 {data['failure_day']}일까지 발생합니다.")
-            
+                   f"고장 징후는 {data['failure_warning_start_day']}일부터 {data['failure_day']}일까지 발생합니다."
+            )
+
             st.markdown("---")
             st.subheader("4. 종합 분석")
             

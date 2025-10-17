@@ -63,7 +63,7 @@ def load_common_styles():
         .home-title {
             font-size: 3.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -91,7 +91,7 @@ def load_common_styles():
         .page-title {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -125,7 +125,7 @@ def load_common_styles():
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #ff6b6b 0%, #4ecdc4 100%);
+            background: linear-gradient(90deg, #4299e1 0%, #4fd1c7 100%);
         }
         
         .industrial-card:hover {
@@ -134,11 +134,11 @@ def load_common_styles():
         }
         
         .card-ml::before {
-            background: linear-gradient(90deg, #ff6b6b 0%, #ff8e8e 100%);
+            background: linear-gradient(90deg, #4299e1 0%, #63b3ed 100%);
         }
         
         .card-dl::before {
-            background: linear-gradient(90deg, #4ecdc4 0%, #6ed3d0 100%);
+            background: linear-gradient(90deg, #4fd1c7 0%, #81e6d9 100%);
         }
         
         .card-header {
@@ -159,15 +159,15 @@ def load_common_styles():
         }
         
         .type-ml {
-            background: rgba(255, 107, 107, 0.1);
-            color: #c53030;
-            border-color: rgba(255, 107, 107, 0.3);
+            background: rgba(66, 153, 225, 0.1);
+            color: #3182ce;
+            border-color: rgba(66, 153, 225, 0.3);
         }
         
         .type-dl {
-            background: rgba(78, 205, 196, 0.1);
+            background: rgba(79, 209, 199, 0.1);
             color: #2c7a7b;
-            border-color: rgba(78, 205, 196, 0.3);
+            border-color: rgba(79, 209, 199, 0.3);
         }
         
         .card-description {
@@ -178,14 +178,22 @@ def load_common_styles():
         }
         
         .performance-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 0.8rem 1.5rem;
             border-radius: 25px;
             font-weight: 600;
             text-align: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card-ml .performance-badge {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+        }
+        
+        .card-dl .performance-badge {
+            background: linear-gradient(135deg, #4fd1c7 0%, #319795 100%);
+            box-shadow: 0 4px 15px rgba(79, 209, 199, 0.3);
         }
         
         .tech-stack {
@@ -195,19 +203,33 @@ def load_common_styles():
         }
         
         .tech-badge {
-            background: #f7fafc;
-            color: #2d3748;
             padding: 0.4rem 0.8rem;
             border-radius: 15px;
             font-size: 0.85rem;
             font-weight: 500;
-            border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
         }
         
-        .tech-badge:hover {
-            background: #edf2f7;
-            border-color: #cbd5e0;
+        .card-ml .tech-badge {
+            background: rgba(66, 153, 225, 0.1);
+            color: #3182ce;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+        
+        .card-ml .tech-badge:hover {
+            background: rgba(66, 153, 225, 0.2);
+            border-color: #4299e1;
+        }
+        
+        .card-dl .tech-badge {
+            background: rgba(79, 209, 199, 0.1);
+            color: #319795;
+            border: 1px solid rgba(79, 209, 199, 0.3);
+        }
+        
+        .card-dl .tech-badge:hover {
+            background: rgba(79, 209, 199, 0.2);
+            border-color: #4fd1c7;
         }
         
         /* 섹션 컨테이너 */
@@ -255,7 +277,7 @@ def load_common_styles():
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -279,19 +301,20 @@ def load_common_styles():
         
         /* Streamlit 요소 커스터마이징 */
         .stButton > button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             color: white;
             border: none;
             border-radius: 10px;
             padding: 0.6rem 2rem;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
         }
         
         .stButton > button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
         }
         
         .stSelectbox > div > div {
@@ -328,7 +351,7 @@ def load_common_styles():
         }
         
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
             color: white;
             border-color: transparent;
         }
@@ -382,10 +405,80 @@ def load_common_styles():
         }
         
         .stWarning {
-            background: rgba(237, 137, 54, 0.1);
-            color: #dd6b20;
-            border: 1px solid rgba(237, 137, 54, 0.3);
+            background: rgba(129, 230, 217, 0.1);
+            color: #2c7a7b;
+            border: 1px solid rgba(129, 230, 217, 0.3);
             border-radius: 8px;
+        }
+        
+        /* Streamlit 기본 색상 덮어쓰기 - 차가운 톤으로 */
+        /* 슬라이더 */
+        /* 슬라이더 조종점*/
+        .stSlider > div > div > div > div {
+            background-color: #4299e1 !important;
+        }
+
+        /* 슬라이더 조종점 위 숫자 */
+        .stSlider > div > div > div > div > div {
+            color: #3182ce !important;
+        }
+        
+        /* 진행 표시줄 */
+        .stProgress > div > div > div > div {
+            background-color: #4299e1 !important;
+        }
+        
+        /* 체크박스 */
+        .stCheckbox > label > div[data-checked="true"] {
+            background-color: #4299e1 !important;
+            border-color: #3182ce !important;
+        }
+        
+        /* 라디오 버튼 */
+        .stRadio > div > label > div[data-checked="true"] {
+            background-color: #4299e1 !important;
+        }
+        
+        .stRadio > div > label > div[data-checked="true"]::before {
+            background-color: #3182ce !important;
+        }
+        
+        /* 선택 박스 활성화 상태 */
+        .stSelectbox > div > div[data-selected="true"] {
+            background-color: rgba(66, 153, 225, 0.1) !important;
+            border-color: #4299e1 !important;
+        }
+        
+        /* 스핀 박스 */
+        .stNumberInput > div > div > input:focus {
+            border-color: #4299e1 !important;
+            box-shadow: 0 0 0 1px #4299e1 !important;
+        }
+        
+        /* 텍스트 입력 포커스 */
+        .stTextInput > div > div > input:focus,
+        .stTextArea > div > div > textarea:focus {
+            border-color: #4299e1 !important;
+            box-shadow: 0 0 0 1px #4299e1 !important;
+        }
+        
+        /* 멀티셀렉트 */
+        .stMultiSelect > div > div > div {
+            border-color: #4299e1 !important;
+        }
+        
+        .stMultiSelect span[data-selected="true"] {
+            background-color: #4299e1 !important;
+            color: white !important;
+        }
+        
+        /* 파일 업로더 */
+        .stFileUploader > div > div > div > div {
+            border-color: #4299e1 !important;
+        }
+        
+        .stFileUploader > div > div > div > div:hover {
+            background-color: rgba(66, 153, 225, 0.05) !important;
         }
         
         /* 반응형 */
@@ -450,15 +543,15 @@ def create_section_container(title, content):
     </div>
     """, unsafe_allow_html=True)
 
-# 색상 상수
+# 색상 상수 - Cool Tone Palette
 COLORS = {
-    'primary': '#667eea',
-    'secondary': '#764ba2',
-    'ml': '#ff6b6b',
-    'dl': '#4ecdc4',
-    'success': '#48bb78',
-    'warning': '#ed8936',
-    'error': '#e53e3e'
+    'primary': '#4299e1',    # 밝은 파랑
+    'secondary': '#3182ce',  # 진한 파랑
+    'ml': '#63b3ed',         # 하늘색
+    'dl': '#4fd1c7',         # 청록색
+    'success': '#68d391',    # 민트 그린
+    'warning': '#81e6d9',    # 연한 청록
+    'error': '#9f7aea'       # 보라색
 }
 
-CHART_COLORS = ['#667eea', '#764ba2', '#ff6b6b', '#4ecdc4', '#48bb78', '#ed8936']
+CHART_COLORS = ['#4299e1', '#3182ce', '#63b3ed', '#4fd1c7', '#68d391', '#81e6d9']

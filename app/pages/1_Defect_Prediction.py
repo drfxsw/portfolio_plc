@@ -376,6 +376,7 @@ with tab2:
 # ========================= TAB 3: End-to-End 시스템 =========================
 with tab3:
     st.header("End-to-End 예측 시스템")
+    st.markdown("테스트 데이터를 불러와 불량확률을 예측합니다.")
     
     # 모델 로드
     @st.cache_resource
@@ -420,7 +421,7 @@ with tab3:
         if 'prediction_done' not in st.session_state:
             st.session_state.prediction_done = False
         
-        # 1단계: 데이터 생성 버튼
+        # 데이터 생성 버튼
         col1, col2 = st.columns([3, 1])
         with col1: 
             st.markdown("**Test 데이터에서 한 샘플씩 가져와서 3개 모델로 예측해보기**")
@@ -436,7 +437,7 @@ with tab3:
                 st.session_state.prediction_done = False
                 st.rerun()
         
-        # 2단계: 현재 데이터 표시
+        # 현재 데이터 표시
         if st.session_state.current_data is not None:
             st.markdown("---")
             st.subheader("현재 센서 데이터")
@@ -486,13 +487,15 @@ with tab3:
                 </div>
                 """, unsafe_allow_html=True)
             
-            # 3단계: 예측하기 버튼
+            # 예측하기 버튼
             st.markdown("---")
-            if st.button("3개 모델로 예측 실행", use_container_width=True):
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                if st.button("3개 모델로 예측 실행", use_container_width=True):
                     st.session_state.prediction_done = True
                     st.rerun()
             
-            # 4단계: 예측 결과 표시
+            # 예측 결과 표시
             if st.session_state.prediction_done:
                 st.markdown("---")
                 st.subheader("예측 결과")
