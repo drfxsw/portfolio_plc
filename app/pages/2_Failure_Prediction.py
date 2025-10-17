@@ -7,13 +7,17 @@ import matplotlib
 matplotlib.use('Agg')  # 차트 백엔드 설정  
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
 import tensorflow as tf
 from tensorflow import keras
 import pickle
 import joblib
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import confusion_matrix, classification_report
-import io
+import time
+import os
 import base64
 import os
 import time
@@ -151,9 +155,14 @@ with tab2:
     @st.cache_data
     def load_failure_results():
         try:
-            results_lstm = joblib.load(model_path + 'results_lstm.pkl')
-            results_gru = joblib.load(model_path + 'results_gru.pkl') 
-            results_cnn = joblib.load(model_path + 'results_cnn.pkl')
+            # defect와 동일한 경로 설정
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.join(current_dir, "..", "..")
+            model_path = os.path.join(project_root, "project_failure", "models")
+            
+            results_lstm = joblib.load(os.path.join(model_path, 'results_lstm.pkl'))
+            results_gru = joblib.load(os.path.join(model_path, 'results_gru.pkl')) 
+            results_cnn = joblib.load(os.path.join(model_path, 'results_cnn.pkl'))
             return results_lstm, results_gru, results_cnn
         except Exception as e:
             st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
@@ -314,270 +323,577 @@ with tab2:
             - 장비 가동률 향상 기대
             """)
 
-# ========================= TAB 3: 진동 패턴 분석 시뮬레이터 =========================
+   # ========================= TAB 3: End-to-End 시스템 =========================
 with tab3:
-    st.header("진동 패턴 분석 시뮬레이터")
-    st.markdown("**합성 진동 데이터로 AI 고장 예측 체험**")
-    st.markdown("Git 저장소에 원본 데이터가 없어 합성 진동 데이터로 AI 예측 과정을 시연합니다!")
+    st.header("End-to-End 고장 예측 시스템")
+    st.markdown("가상 베어링 데이터를 생성하고 실시간으로 고장을 예측합니다.")
     
-    # 합성 진동 데이터 생성 함수 (원본 노트북 스타일)
-    def generate_synthetic_vibration():
-        """실제 베어링 진동 파형과 유사한 데이터 생성 (2000 samples × 8 channels)"""
-        np.random.seed(42)  # 일관된 결과
-        
-        # 정상/고장 여부 랜덤 결정
-        failure_risk = np.random.uniform(0.3, 0.9)
-        
-        # 샘플 수 (원본처럼 2000개)
-        n_samples = 2000
-        n_channels = 8  # ch1~ch8
-        
-        # 시간축 생성 (20kHz 샘플링 기준)
-        t = np.linspace(0, n_samples/20000, n_samples)  # 0.1초
-        
-        # 베어링별 진동 파형 생성
-        vibration_data = np.zeros((n_samples, n_channels))
-        
-        # 베어링별 특성
-        bearings = {
-            'Bearing 1': [0, 1],  # ch1, ch2 - 정상
-            'Bearing 2': [2, 3],  # ch3, ch4 - 정상  
-            'Bearing 3': [4, 5],  # ch5, ch6 - 내륜결함
-            'Bearing 4': [6, 7]   # ch7, ch8 - 롤러결함
-        }
-        
-        for bearing_name, channels in bearings.items():
-            # 베어링별 고장 정도 설정
-            if bearing_name in ['Bearing 1', 'Bearing 2']:
-                # 정상 베어링: 낮은 진동
-                base_amplitude = 0.1 + failure_risk * 0.05
-                noise_level = 0.02
-                fault_freq = None
-            elif bearing_name == 'Bearing 3':
-                # 내륜결함: 중간 진동 + 특정 주파수
-                base_amplitude = 0.15 + failure_risk * 0.1
-                noise_level = 0.05
-                fault_freq = 87.3  # 내륜결함 주파수
-            else:  # Bearing 4
-                # 롤러결함: 높은 진동 + 충격
-                base_amplitude = 0.2 + failure_risk * 0.15
-                noise_level = 0.08
-                fault_freq = 142.7  # 롤러결함 주파수
+    # 모델 로드 함수
+    @st.cache_resource
+    def load_models():
+        try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.join(current_dir, "..", "..")
+            model_path = os.path.join(project_root, "project_failure", "models")
             
-            for ch_idx in channels:
-                # 기본 회전 주파수 (50Hz)
-                signal = base_amplitude * np.sin(2 * np.pi * 50 * t)
-                
-                # 고차 주파수 성분 추가
-                signal += base_amplitude * 0.3 * np.sin(2 * np.pi * 100 * t)
-                signal += base_amplitude * 0.2 * np.sin(2 * np.pi * 150 * t)
-                
-                # 고장 주파수 추가
-                if fault_freq:
-                    fault_amplitude = base_amplitude * failure_risk * 0.4
-                    signal += fault_amplitude * np.sin(2 * np.pi * fault_freq * t)
-                
-                # 랜덤 노이즈
-                noise = np.random.normal(0, noise_level, n_samples)
-                signal += noise
-                
-                # 충격성 신호 (롤러 결함의 경우)
-                if bearing_name == 'Bearing 4' and failure_risk > 0.6:
-                    # 랜덤한 위치에 충격 신호 추가
-                    n_impacts = int(n_samples * failure_risk * 0.001)
-                    impact_positions = np.random.choice(n_samples-50, n_impacts, replace=False)
-                    for pos in impact_positions:
-                        # 감쇠 진동 형태의 충격
-                        impact_length = 50
-                        decay = np.exp(-np.arange(impact_length) * 0.1)
-                        impact_signal = base_amplitude * 2 * decay * np.sin(2 * np.pi * 200 * np.arange(impact_length) / 20000)
-                        signal[pos:pos+impact_length] += impact_signal
-                
-                vibration_data[:, ch_idx] = signal
-        
-        return vibration_data, failure_risk > 0.6
+            model_lstm = keras.models.load_model(os.path.join(model_path, "model_lstm.keras"))
+            model_gru = keras.models.load_model(os.path.join(model_path, "model_gru.keras"))
+            model_cnn = keras.models.load_model(os.path.join(model_path, "model_cnn.keras"))
+            scaler = joblib.load(os.path.join(model_path, "scaler.pkl"))
+            
+            return model_lstm, model_gru, model_cnn, scaler
+        except Exception as e:
+            st.error(f"모델 로드 실패: {e}")
+            return None, None, None, None
     
-    # STEP 1: 진동 데이터 생성
-    st.markdown("---")
-    st.markdown("### **STEP 1: 진동 센서 데이터 생성**")
+    model_lstm, model_gru, model_cnn, scaler = load_models()
     
-    if st.button("새로운 진동 데이터 생성", type="primary"):
-        with st.spinner("진동 센서 데이터 생성 중..."):
-            time.sleep(1)
-            
-            # 합성 진동 데이터 생성
-            vibration_data = generate_synthetic_vibration()
-            
-            # 고장/정상 여부 결정 (진동 강도 기반)
-            avg_intensity = np.mean(vibration_data)
-            is_failure = avg_intensity > 0.6
-            
-            st.session_state.vibration_data = vibration_data
-            st.session_state.is_failure = is_failure
-            
-            st.success("진동 데이터 생성 완료!")
-            
-            # 상태 표시
-            if is_failure:
-                st.error("**고진동 패턴 감지** - 고장 위험성이 높은 데이터")
-            else:
-                st.success("**정상 진동 패턴** - 정상 범위 내 데이터")
-    
-    # STEP 2: 진동 패턴 시각화
-    if hasattr(st.session_state, 'vibration_data'):
+    if all([model_lstm, model_gru, model_cnn, scaler]):
         st.markdown("---")
-        st.markdown("### **STEP 2: 진동 패턴 시각화**")
         
-        vibration_data = st.session_state.vibration_data
-        is_failure = st.session_state.is_failure
+        # 사용자 입력
+        st.subheader("1. 시뮬레이션 설정")
         
-        # 주요 센서 4개 표시
-        key_sensors = [0, 8, 16, 24]
-        sensor_names = ["X축 진동", "Y축 진동", "Z축 진동", "회전 진동"]
+        col1, col2 = st.columns([3, 1])
         
-        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-        fig.suptitle('PLC 장비 진동 패턴 분석 (10 Time Steps)', fontsize=14, fontweight='bold')
+        with col1:
+            failure_day = st.slider(
+                "고장 발생 시점 (일)",
+                min_value=1,
+                max_value=30,
+                value=25,
+                step=1,
+                help="이 시점에 장비가 고장납니다"
+            )
         
-        for i, (sensor_idx, sensor_name) in enumerate(zip(key_sensors, sensor_names)):
-            row, col = i // 2, i % 2
-            ax = axes[row, col]
+        with col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            generate_btn = st.button("랜덤 데이터 생성", type="primary", use_container_width=True)
+        
+        # 데이터 생성
+        if generate_btn:
+            # 이전 예측 결과 삭제
+            if 'prediction_results' in st.session_state:
+                del st.session_state.prediction_results
             
-            sensor_data = vibration_data[:, sensor_idx]
-            timesteps = range(1, 11)
+            # 정상/고장 데이터 특성 범위 (실제 데이터 기반)
+            normal_ranges = {
+                'rms': (0.062242, 0.237261, 0.148823, 0.010883),
+                'peak': (0.312, 2.8, 0.673632, 0.125524),
+                'std': (0.058207, 0.176177, 0.094817, 0.012779),
+                'kurtosis': (-0.060628, 71.572022, 0.752199, 0.964164)
+            }
             
-            # 고장/정상에 따른 색상
-            color = '#FF6B6B' if is_failure else '#4ECDC4'
+            failure_ranges = {
+                'rms': (0.143046, 0.59361, 0.173856, 0.026982),
+                'peak': (0.562, 5.0, 1.302485, 0.732393),
+                'std': (0.085083, 0.579418, 0.129529, 0.03184),
+                'kurtosis': (0.277354, 71.579558, 4.618403, 7.498321)
+            }
             
-            ax.plot(timesteps, sensor_data, marker='o', linewidth=2, 
-                   markersize=5, color=color, alpha=0.8)
-            ax.fill_between(timesteps, sensor_data, alpha=0.3, color=color)
+            # 가상 데이터 생성 (5분 간격, 고장일까지만)
+            np.random.seed(int(time.time()))
             
-            ax.set_title(f'{sensor_name}', fontsize=11, fontweight='bold')
-            ax.set_xlabel('Time Step')
-            ax.set_ylabel('진동 강도')
-            ax.grid(True, alpha=0.3)
-            ax.set_facecolor('#F8F9FA')
-            ax.set_xticks(timesteps)
-        
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
-        
-        # 진동 통계 정보
-        st.markdown("**진동 패턴 분석 결과**")
-        
-        stats_col1, stats_col2, stats_col3, stats_col4 = st.columns(4)
-        
-        avg_vibration = np.mean(vibration_data)
-        max_vibration = np.max(vibration_data)
-        std_vibration = np.std(vibration_data)
-        
-        with stats_col1:
-            st.metric("평균 진동", f"{avg_vibration:.3f}")
-        with stats_col2:
-            st.metric("최대 진동", f"{max_vibration:.3f}")
-        with stats_col3:
-            st.metric("진동 변동성", f"{std_vibration:.3f}")
-        with stats_col4:
-            anomaly_score = (max_vibration - avg_vibration) / std_vibration if std_vibration > 0 else 0
-            st.metric("이상 지수", f"{anomaly_score:.2f}")
-        
-        # STEP 3: AI 고장 예측
-        st.markdown("---")
-        st.markdown("### 🤖 **STEP 3: AI 고장 예측 분석**")
-        
-        if st.button("🔮 AI 모델로 고장 예측 실행", type="primary"):
-            with st.spinner("AI 모델 분석 중... 잠시만 기다려주세요"):
-                time.sleep(2)
+            measurements_per_hour = 12  # 5분 간격
+            measurements_per_day = 288  # 24시간 × 12
+            total_measurements = failure_day * measurements_per_day  # 고장일까지만
+            features = 8  # ch1-ch2의 4가지 통계 = 8개 특성
+            
+            synthetic_data = []
+            labels = []
+            
+            # 알람 단계별 목표 고장 비율 설정
+            # 고장일 기준 역산
+            failure_warning_start_day = max(1, failure_day - 5)  # 위험 알람 시작 (5일간)
+            transition_start_day = max(1, failure_warning_start_day - 3)  # 경고 시작 (3일 전)
+            caution_start_day = max(1, transition_start_day - 1)  # 주의 시작 (1일 전)
+            
+            # 고장일까지만 데이터 생성
+            for i in range(total_measurements):
+                current_day = (i // measurements_per_day) + 1  # 현재 일수 (1부터 시작)
                 
-                # 합성 예측 결과 생성 (진동 강도 기반)
-                base_risk = min(avg_vibration * 1.2, 0.95)
-                
-                pred_lstm = base_risk + np.random.normal(0, 0.05)
-                pred_gru = base_risk + np.random.normal(0, 0.03)  
-                pred_cnn = base_risk + np.random.normal(0, 0.04)
-                
-                # 범위 제한
-                pred_lstm = np.clip(pred_lstm, 0, 1)
-                pred_gru = np.clip(pred_gru, 0, 1)
-                pred_cnn = np.clip(pred_cnn, 0, 1)
-                
-                avg_prediction = (pred_lstm + pred_gru + pred_cnn) / 3
-                
-                st.success("AI 분석 완료!")
-                
-                # 예측 결과 표시
-                st.markdown("**🧠 AI 모델별 고장 확률 예측**")
-                
-                model_col1, model_col2, model_col3, avg_col = st.columns(4)
-                
-                with model_col1:
-                    lstm_pct = pred_lstm * 100
-                    color = "🔴" if lstm_pct > 50 else "🟡" if lstm_pct > 20 else "🟢"
-                    st.metric("LSTM 모델", f"{color} {lstm_pct:.1f}%")
-                
-                with model_col2:
-                    gru_pct = pred_gru * 100
-                    color = "🔴" if gru_pct > 50 else "🟡" if gru_pct > 20 else "🟢"
-                    st.metric("GRU 모델", f"{color} {gru_pct:.1f}%")
-                
-                with model_col3:
-                    cnn_pct = pred_cnn * 100
-                    color = "🔴" if cnn_pct > 50 else "🟡" if cnn_pct > 20 else "🟢"
-                    st.metric("CNN 모델", f"{color} {cnn_pct:.1f}%")
-                
-                with avg_col:
-                    avg_pct = avg_prediction * 100
-                    if avg_pct > 50:
-                        final_color = "🔴"
-                    elif avg_pct > 20:
-                        final_color = "🟡"
-                    else:
-                        final_color = "🟢"
-                    
-                    st.metric("종합 예측", f"{final_color} {avg_pct:.1f}%")
-                
-                # 최종 판정 결과
-                st.markdown("---")
-                st.markdown("### **최종 분석 결과**")
-                
-                if avg_pct > 50:
-                    st.error(f"**고장 위험 감지!** AI 예측 확률: {avg_pct:.1f}%")
-                    st.warning("권장 조치: 즉시 장비 점검 및 정비 필요")
-                elif avg_pct > 20:
-                    st.warning(f"**주의 필요** AI 예측 확률: {avg_pct:.1f}%")
-                    st.info("권장 조치: 정기 점검 일정 앞당김 검토")
+                # 각 일별 목표 고장 신호 비율
+                if current_day < caution_start_day:
+                    # 완전 정상
+                    failure_ratio = 0.0
+                elif current_day < transition_start_day:
+                    # 주의 단계 (30% 고장 신호)
+                    failure_ratio = 0.30
+                elif current_day < failure_warning_start_day:
+                    # 경고 단계 (50% 고장 신호, 3일간)
+                    failure_ratio = 0.50
+                elif current_day < failure_day:
+                    # 위험 단계 (80% 고장 신호, 고장 전날까지)
+                    failure_ratio = 0.80
                 else:
-                    st.success(f"**정상 상태** AI 예측 확률: {avg_pct:.1f}%")
-                    st.info("권장 조치: 현재 운영 상태 유지")
+                    # 고장 당일 (100% 고장 신호)
+                    failure_ratio = 1.0
                 
-                # 예측 신뢰도 차트
-                st.markdown("**모델별 예측 신뢰도**")
+                # 확률적으로 정상/고장 데이터 선택
+                if np.random.random() < failure_ratio:
+                    ranges = failure_ranges
+                    label = 1
+                else:
+                    ranges = normal_ranges
+                    label = 0
                 
-                models = ['LSTM', 'GRU', 'CNN', '평균']
-                predictions = [pred_lstm*100, pred_gru*100, pred_cnn*100, avg_prediction*100]
-                colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+                # 1개 특성 세트 생성 (이 시점의 대표값)
+                sample = []
                 
-                fig, ax = plt.subplots(figsize=(10, 6))
-                bars = ax.bar(models, predictions, color=colors, alpha=0.8, edgecolor='black', linewidth=1)
+                # ch1의 4가지 특성 생성
+                for stat_name in ['rms', 'peak', 'std', 'kurtosis']:
+                    min_val, max_val, mean, std = ranges[stat_name]
+                    value = np.random.normal(mean, std)
+                    value = np.clip(value, min_val, max_val)
+                    sample.append(value)
                 
-                ax.axhline(y=50, color='red', linestyle='--', alpha=0.7, label='고장 임계값 (50%)')
-                ax.axhline(y=20, color='orange', linestyle='--', alpha=0.7, label='주의 임계값 (20%)')
+                # ch2의 4가지 특성 독립적으로 생성
+                for stat_name in ['rms', 'peak', 'std', 'kurtosis']:
+                    min_val, max_val, mean, std = ranges[stat_name]
+                    value = np.random.normal(mean, std)
+                    value = np.clip(value, min_val, max_val)
+                    sample.append(value)
                 
-                ax.set_ylabel('고장 확률 (%)', fontsize=12)
-                ax.set_title('AI 모델별 고장 예측 결과', fontsize=14, fontweight='bold')
-                ax.set_ylim(0, 100)
-                ax.legend()
-                ax.grid(True, alpha=0.3)
+                synthetic_data.append(sample)
+                labels.append(label)
+            
+            synthetic_data = np.array(synthetic_data)  # shape: (failure_day * 288, 8)
+            labels = np.array(labels)  # shape: (failure_day * 288,)
+            
+            # 시계열 윈도우 생성 (10개 타임스텝)
+            # 각 시점마다 예측을 위해 슬라이딩 윈도우 생성
+            window_size = 10
+            
+            if len(synthetic_data) >= window_size:
+                X_sequences = []
+                y_sequences = []
+                pred_time_indices = []  # 각 예측이 어느 시점인지 기록
                 
-                for bar, pred in zip(bars, predictions):
-                    height = bar.get_height()
-                    ax.text(bar.get_x() + bar.get_width()/2., height + 1,
-                           f'{pred:.1f}%', ha='center', va='bottom', fontweight='bold')
+                for i in range(window_size, len(synthetic_data)):
+                    # i번째 시점 예측 = (i-10)~(i-1) 시점 데이터 사용
+                    X_sequences.append(synthetic_data[i-window_size:i])
+                    y_sequences.append(labels[i])
+                    pred_time_indices.append(i)  # 시점 인덱스
                 
-                plt.tight_layout()
-                st.pyplot(fig)
-                plt.close(fig)
+                X_sequences = np.array(X_sequences)  # shape: (N, 10, 8)
+                y_sequences = np.array(y_sequences)  # shape: (N,)
+                pred_time_indices = np.array(pred_time_indices)
+            else:
+                st.error("데이터가 부족합니다. 최소 10개 시점이 필요합니다.")
+                X_sequences = np.array([])
+                y_sequences = np.array([])
+                pred_time_indices = np.array([])
+            
+            # 정규화
+            if len(X_sequences) > 0:
+                X_2d = X_sequences.reshape(-1, features)
+                X_scaled_2d = scaler.transform(X_2d)
+                X_scaled = X_scaled_2d.reshape(X_sequences.shape)
+                
+                # 세션에 저장 (예측은 아직 안함)
+                st.session_state.simulation_data = {
+                    'synthetic_data': synthetic_data,
+                    'labels': labels,
+                    'X_scaled': X_scaled,
+                    'y_sequences': y_sequences,
+                    'pred_time_indices': pred_time_indices,
+                    'failure_day': failure_day,
+                    'failure_warning_start_day': failure_warning_start_day,
+                    'caution_start_day': caution_start_day,
+                    'transition_start_day': transition_start_day,
+                    'measurements_per_day': measurements_per_day
+                }
+                
+                st.info(f"{failure_day}일에 고장 발생 (장비 정지)")
+                st.info(f"{failure_warning_start_day}일부터 '위험' 알람 시작")
+            else:
+                st.error("시퀀스 생성 실패")
+        
+        # 예측하기 버튼 (데이터가 생성된 경우에만 표시)
+        if 'simulation_data' in st.session_state:
+            st.markdown("---")
+            
+            col1, col2, col3 = st.columns([1, 1, 1])
+            with col2:
+                predict_btn = st.button("예측하기", type="secondary", use_container_width=True)
+            
+            # 예측 실행
+            if predict_btn:
+                data = st.session_state.simulation_data
+                
+                with st.spinner("예측 중..."):
+                    # 모델 예측
+                    pred_lstm = (model_lstm.predict(data['X_scaled'], verbose=0) > 0.5).astype(int).flatten()
+                    pred_gru = (model_gru.predict(data['X_scaled'], verbose=0) > 0.5).astype(int).flatten()
+                    pred_cnn = (model_cnn.predict(data['X_scaled'], verbose=0) > 0.5).astype(int).flatten()
+                    
+                    # 예측 결과 저장
+                    st.session_state.prediction_results = {
+                        'pred_lstm': pred_lstm,
+                        'pred_gru': pred_gru,
+                        'pred_cnn': pred_cnn
+                    }
+                
+        
+        # 결과 표시 (예측이 완료된 경우에만)
+        if 'simulation_data' in st.session_state and 'prediction_results' in st.session_state:
+            data = st.session_state.simulation_data
+            predictions = st.session_state.prediction_results
+            
+            st.markdown("---")
+            st.subheader("2. 모델 예측 결과")
+            
+            # 일별 알람 레벨 계산 함수
+            def calculate_daily_alarm_levels(predictions, time_indices, measurements_per_day, total_days):
+                """일별 고장 신호 비율로 알람 레벨 계산"""
+                daily_levels = {}
+                
+                for day in range(total_days):
+                    # 해당 일의 측정값 필터링
+                    day_start = day * measurements_per_day
+                    day_end = (day + 1) * measurements_per_day
+                    
+                    # 해당 일에 속하는 예측 찾기
+                    day_mask = (time_indices >= day_start) & (time_indices < day_end)
+                    day_predictions = predictions[day_mask]
+                    
+                    if len(day_predictions) > 0:
+                        failure_ratio = np.mean(day_predictions)
+                        
+                        # 알람 레벨 판정
+                        if failure_ratio >= 0.80:
+                            level = "위험"
+                            color = "red"
+                        elif failure_ratio >= 0.50:
+                            level = "경고"
+                            color = "orange"
+                        elif failure_ratio >= 0.30:
+                            level = "주의"
+                            color = "yellow"
+                        else:
+                            level = "정상"
+                            color = "green"
+                        
+                        daily_levels[day + 1] = {
+                            'level': level,
+                            'ratio': failure_ratio,
+                            'color': color
+                        }
+                
+                return daily_levels
+            
+            # 각 모델의 일별 알람 레벨 계산
+            total_days = 30  # 전체 30일
+            levels_lstm = calculate_daily_alarm_levels(
+                predictions['pred_lstm'], data['pred_time_indices'], 
+                data['measurements_per_day'], total_days
+            )
+            levels_gru = calculate_daily_alarm_levels(
+                predictions['pred_gru'], data['pred_time_indices'],
+                data['measurements_per_day'], total_days
+            )
+            levels_cnn = calculate_daily_alarm_levels(
+                predictions['pred_cnn'], data['pred_time_indices'],
+                data['measurements_per_day'], total_days
+            )
+            
+            # 레벨별 날짜 그룹화 함수
+            def group_days_by_level(daily_levels):
+                """레벨별로 날짜를 그룹화"""
+                level_days = {
+                    "주의": [],
+                    "경고": [],
+                    "위험": []
+                }
+                
+                for day in sorted(daily_levels.keys()):
+                    level = daily_levels[day]['level']
+                    if level in level_days:
+                        level_days[level].append(day)
+                
+                return level_days
+            
+            days_lstm = group_days_by_level(levels_lstm)
+            days_gru = group_days_by_level(levels_gru)
+            days_cnn = group_days_by_level(levels_cnn)
+            
+            # 결과 테이블
+            col1, col2, col3 = st.columns(3)
+            
+            models = [
+                ("LSTM", days_lstm),
+                ("GRU", days_gru),
+                ("CNN", days_cnn)
+            ]
+            
+            for col, (model_name, level_days) in zip([col1, col2, col3], models):
+                with col:
+                    st.markdown(f"### {model_name}")
+                    
+                    st.markdown("**알람 발생 일자**")
+                    
+                    # 주의
+                    if level_days["주의"]:
+                        days_str = ", ".join(map(str, level_days["주의"]))
+                        st.markdown(f"**주의**: {days_str}일")
+                    else:
+                        st.markdown(f"**주의**: 없음")
+                    
+                    # 경고
+                    if level_days["경고"]:
+                        days_str = ", ".join(map(str, level_days["경고"]))
+                        st.markdown(f"**경고**: {days_str}일")
+                    else:
+                        st.markdown(f"**경고**: 없음")
+                    
+                    # 위험
+                    if level_days["위험"]:
+                        days_str = ", ".join(map(str, level_days["위험"]))
+                        st.markdown(f"**위험**: {days_str}일")
+                    else:
+                        st.markdown(f"**위험**: 없음")
+            
+            st.markdown("---")
+            
+            # 시계열 예측 시각화
+            st.subheader("3. 시계열 예측 비교")
+            
+            # 일별 평균으로 집계 (30개 포인트)
+            total_days = 30
+            measurements_per_day = data['measurements_per_day']
+            
+            models_pred = [
+                ("LSTM", predictions['pred_lstm'], levels_lstm),
+                ("GRU", predictions['pred_gru'], levels_gru),
+                ("CNN", predictions['pred_cnn'], levels_cnn)
+            ]
+            
+            # Plotly 서브플롯 생성
+            fig = make_subplots(
+                rows=3, cols=1,
+                subplot_titles=[f"{model[0]} 모델 - 일별 예측" for model in models_pred],
+                vertical_spacing=0.08,
+                shared_xaxes=True
+            )
+            
+            # 범례용 invisible traces 추가 (첫 번째 서브플롯에만)
+            if True:  # 항상 실행
+                # 고장 발생일 범례
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='lines',
+                        name='고장 발생일',
+                        line=dict(color='red', dash='dash', width=2),
+                        showlegend=True,
+                        legendgroup='failure_day'
+                    ),
+                    row=1, col=1
+                )
+                
+                # 고장 징후 구간 범례
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='lines',
+                        name='고장 징후 구간',
+                        line=dict(color='pink', width=10),
+                        opacity=0.3,
+                        showlegend=True,
+                        legendgroup='failure_warning'
+                    ),
+                    row=1, col=1
+                )
+            
+            for i, (model_name, predictions_model, daily_levels) in enumerate(models_pred):
+                row = i + 1
+                
+                # X축: 1~30일
+                days = list(range(1, total_days + 1))
+                
+                # 일별 평균 예측값 계산
+                daily_predictions = []
+                for day in days:
+                    if day in daily_levels:
+                        daily_predictions.append(daily_levels[day]['ratio'])
+                    else:
+                        daily_predictions.append(0)  # 데이터 없는 날은 0
+                
+                # 일별 실제 라벨 계산
+                daily_actual = []
+                for day in days:
+                    if day < data['caution_start_day']:
+                        daily_actual.append(0)  # 정상
+                    elif day < data['transition_start_day']:
+                        daily_actual.append(0.30)  # 주의 (30%)
+                    elif day < data['failure_warning_start_day']:
+                        daily_actual.append(0.60)  # 경고 (60%)
+                    elif day < data['failure_day']:
+                        daily_actual.append(0.80)  # 위험 (80%)
+                    elif day == data['failure_day']:
+                        daily_actual.append(1.0)  # 고장 (100%)
+                    else:
+                        daily_actual.append(np.nan)  # 데이터 없음
+                
+                # 실제 라벨 (고장일까지만)
+                valid_days = [d for d in days if d <= data['failure_day']]
+                valid_actual = [daily_actual[j] for j in range(len(days)) if days[j] <= data['failure_day']]
+                
+                # 실제 라벨 추가
+                fig.add_trace(
+                    go.Scatter(
+                        x=valid_days,
+                        y=valid_actual,
+                        mode='lines+markers',
+                        name='실제 라벨',
+                        line=dict(color='black', dash='dash', width=2),
+                        marker=dict(symbol='circle', size=6),
+                        hovertemplate='<b>실제 라벨</b><br>일: %{x}<br>고장 비율: %{y:.2%}<extra></extra>',
+                        showlegend=(i == 0),
+                        legendgroup='actual'
+                    ),
+                    row=row, col=1
+                )
+                
+                # 예측값 추가
+                fig.add_trace(
+                    go.Scatter(
+                        x=days,
+                        y=daily_predictions,
+                        mode='lines+markers',
+                        name=f'{model_name} 예측',
+                        line=dict(color='blue', width=2),
+                        marker=dict(symbol='square', size=6),
+                        hovertemplate=f'<b>{model_name} 예측</b><br>일: %{{x}}<br>고장 비율: %{{y:.2%}}<extra></extra>',
+                        showlegend=True,
+                        legendgroup=f'pred_{model_name.lower()}'
+                    ),
+                    row=row, col=1
+                )
+                
+                # 고장 발생일 수직선 (각 서브플롯에 개별 추가)
+                fig.add_shape(
+                    type="line",
+                    x0=data['failure_day'], x1=data['failure_day'],
+                    y0=-0.1, y1=1.1,
+                    line=dict(color="red", width=2, dash="dash"),
+                    opacity=0.7,
+                    row=row, col=1
+                )
+                
+                # 고장 징후 구간 배경
+                fig.add_shape(
+                    type="rect",
+                    x0=data['failure_warning_start_day'], x1=data['failure_day'],
+                    y0=-0.1, y1=1.1,
+                    fillcolor="pink",
+                    opacity=0.15,
+                    layer="below",
+                    line_width=0,
+                    row=row, col=1
+                )
+                
+                # 알람 레벨 배경색
+                for day in days:
+                    if day in daily_levels:
+                        level_color = daily_levels[day]['color']
+                        if level_color == 'yellow':
+                            fig.add_shape(
+                                type="rect",
+                                x0=day - 0.5, x1=day + 0.5,
+                                y0=-0.1, y1=1.1,
+                                fillcolor="yellow", opacity=0.1,
+                                layer="below", line_width=0,
+                                row=row, col=1
+                            )
+                        elif level_color == 'orange':
+                            fig.add_shape(
+                                type="rect",
+                                x0=day - 0.5, x1=day + 0.5,
+                                y0=-0.1, y1=1.1,
+                                fillcolor="orange", opacity=0.15,
+                                layer="below", line_width=0,
+                                row=row, col=1
+                            )
+                        elif level_color == 'red':
+                            fig.add_shape(
+                                type="rect",
+                                x0=day - 0.5, x1=day + 0.5,
+                                y0=-0.1, y1=1.1,
+                                fillcolor="red", opacity=0.2,
+                                layer="below", line_width=0,
+                                row=row, col=1
+                            )
+            
+            # 레이아웃 설정
+            fig.update_layout(
+                height=800,
+                showlegend=True,
+                legend=dict(
+                    orientation="v",
+                    yanchor="top",
+                    y=1,
+                    xanchor="left",
+                    x=1.02,
+                    bgcolor="rgba(255,255,255,0.8)",
+                    bordercolor="rgba(0,0,0,0.2)",
+                    borderwidth=1
+                ),
+                hovermode='x unified',
+                margin=dict(r=150)  # 오른쪽 마진 추가 (범례 공간)
+            )
+            
+            # Y축 설정
+            fig.update_yaxes(title_text="고장 비율", range=[-0.1, 1.1])
+            
+            # X축 설정 (마지막 서브플롯에만)
+            fig.update_xaxes(title_text="시간 (일)", row=3, col=1)
+            fig.update_xaxes(range=[0, 31], dtick=5)
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.info(f"설명: 윈도우 크기 10으로 인해 처음 10개 시점은 예측 불가합니다. "
+                   f"일별 288개 측정 중 고장 신호 비율로 평균을 계산했습니다. "
+                   f"배경색: 주의(노랑), 경고(주황), 위험(빨강). "
+                   f"고장 징후는 {data['failure_warning_start_day']}일부터 {data['failure_day']}일까지 발생합니다.")
+            
+            st.markdown("---")
+            st.subheader("4. 종합 분석")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown(f"""
+                **시뮬레이션 설정**
+                - 총 기간: 30일
+                - 고장 시점: {data['failure_day']}일
+                - 측정 간격: 5분
+                - 일일 측정: 288회
+                
+                **데이터 특성**
+                - 생성된 시점: {len(data['synthetic_data']):,}개 ({data['failure_day']}일분)
+                - 시퀀스 수: {len(data['y_sequences']):,}개
+                - 특성 수: 8개 (ch1, ch2 각 4개)
+                
+                **알람 기준**
+                - 주의: 일일 30% 이상 고장 신호
+                - 경고: 일일 50% 이상 고장 신호
+                - 위험: 일일 80% 이상 고장 신호
+                """)
+            
+            with col2:
+                st.markdown(f"""
+                **알람 기준**
+                - 주의: 일일 30% 이상 고장 신호
+                - 경고: 일일 50% 이상 고장 신호
+                - 위험: 일일 80% 이상 고장 신호
+                
+                **실용성 평가**
+                - 30일 장기 모니터링 시뮬레이션
+                - 3단계 알람 시스템 (주의/경고/위험)
+                - 일별 고장 비율 기반 판단
+                - 오경보 최소화 전략 적용
+                """)
     
     else:
-        st.info("👆 먼저 위의 'STEP 1: 진동 데이터 생성' 버튼을 클릭해주세요!")
+        st.error("모델 파일을 불러올 수 없습니다. 모델 경로를 확인해주세요.")

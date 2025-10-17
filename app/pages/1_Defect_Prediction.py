@@ -5,6 +5,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
 import joblib
 import pickle
 from sklearn.metrics import confusion_matrix, classification_report
@@ -211,46 +214,111 @@ with tab2:
         col1, col2 = st.columns(2)
         
         with col1:
-            # 성능 지표 막대 그래프
-            fig, ax = plt.subplots(figsize=(10, 6))
+            # 성능 지표 막대 그래프 (Plotly)
+            fig = go.Figure()
             
-            x = np.arange(len(df_performance))
-            width = 0.2
+            models = df_performance['Model']
+            x = np.arange(len(models))
             
-            ax.bar(x - width*1.5, df_performance['Accuracy'], width, label='Accuracy', alpha=0.8)
-            ax.bar(x - width/2, df_performance['Precision'], width, label='Precision', alpha=0.8)
-            ax.bar(x + width/2, df_performance['Recall'], width, label='Recall', alpha=0.8)
-            ax.bar(x + width*1.5, df_performance['F1-Score'], width, label='F1-Score', alpha=0.8)
+            # 각 지표별 막대 추가
+            fig.add_trace(go.Bar(
+                name='Accuracy',
+                x=models,
+                y=df_performance['Accuracy'],
+                hovertemplate='<b>Accuracy</b><br>모델: %{x}<br>값: %{y:.4f}<extra></extra>',
+                marker_color='lightblue',
+                opacity=0.8
+            ))
             
-            ax.set_ylabel('Score')
-            ax.set_title('모델별 성능 지표 비교', fontweight='bold')
-            ax.set_xticks(x)
-            ax.set_xticklabels(['Logistic', 'Random Forest', 'XGBoost'])
-            ax.legend()
-            ax.grid(True, alpha=0.3, axis='y')
-            ax.set_ylim(0, 1)
+            fig.add_trace(go.Bar(
+                name='Precision',
+                x=models,
+                y=df_performance['Precision'],
+                hovertemplate='<b>Precision</b><br>모델: %{x}<br>값: %{y:.4f}<extra></extra>',
+                marker_color='orange',
+                opacity=0.8
+            ))
             
-            st.pyplot(fig)
+            fig.add_trace(go.Bar(
+                name='Recall',
+                x=models,
+                y=df_performance['Recall'],
+                hovertemplate='<b>Recall</b><br>모델: %{x}<br>값: %{y:.4f}<extra></extra>',
+                marker_color='green',
+                opacity=0.8
+            ))
+            
+            fig.add_trace(go.Bar(
+                name='F1-Score',
+                x=models,
+                y=df_performance['F1-Score'],
+                hovertemplate='<b>F1-Score</b><br>모델: %{x}<br>값: %{y:.4f}<extra></extra>',
+                marker_color='red',
+                opacity=0.8
+            ))
+            
+            fig.update_layout(
+                title='모델별 성능 지표 비교',
+                xaxis_title='모델',
+                yaxis_title='Score',
+                barmode='group',
+                yaxis=dict(range=[0, 1]),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                ),
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            # Confusion Matrix 비교
-            fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-            
+            # Confusion Matrix 비교 (Plotly)
             results_list = [results_logistic, results_rf, results_xgb]
             model_names = ['Logistic', 'RF', 'XGBoost']
             
+            # 서브플롯 생성
+            fig = make_subplots(
+                rows=1, cols=3,
+                subplot_titles=[f'{name} Confusion Matrix' for name in model_names],
+                horizontal_spacing=0.1
+            )
+            
             for i, (result, name) in enumerate(zip(results_list, model_names)):
                 cm = result['confusion_matrix']
-                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                           xticklabels=['정상', '불량'],
-                           yticklabels=['정상', '불량'],
-                           ax=axes[i])
-                axes[i].set_title(f'{name} Confusion Matrix')
-                axes[i].set_xlabel('예측')
-                axes[i].set_ylabel('실제')
+                
+                # Heatmap 추가
+                fig.add_trace(
+                    go.Heatmap(
+                        z=cm,
+                        x=['정상', '불량'],
+                        y=['정상', '불량'],
+                        colorscale='Blues',
+                        showscale=(i == 2),  # 마지막에만 컬러바 표시
+                        hovertemplate='실제: %{y}<br>예측: %{x}<br>개수: %{z}<extra></extra>',
+                        text=cm,
+                        texttemplate="%{text}",
+                        textfont={"size": 14}
+                    ),
+                    row=1, col=i+1
+                )
             
-            plt.tight_layout()
-            st.pyplot(fig)
+            # Y축 라벨 설정
+            fig.update_yaxes(title_text="실제", row=1, col=1)
+            
+            # X축 라벨 설정 (가운데에만)
+            fig.update_xaxes(title_text="예측", row=1, col=2)
+            
+            fig.update_layout(
+                height=300,
+                title_text="",
+                showlegend=False
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
         
         st.markdown("---")
         
@@ -494,35 +562,56 @@ with tab3:
                 # 확률 비교 차트
                 st.subheader("모델별 예측 정답 확률 비교")
                 
-                fig, ax = plt.subplots(figsize=(10, 6))
-                
                 models = ['Logistic', 'Random Forest', 'XGBoost']
                 probs = [confidence_logistic, confidence_rf, confidence_xgb]
                 predictions = [pred_logistic, pred_rf, pred_xgb]
                 
                 # 막대 색깔 (정답이면 초록, 틀리면 빨강)
                 colors = []
+                status_text = []
                 for pred in predictions:
                     if pred == y_actual:
                         colors.append('lightgreen')
+                        status_text.append('정답')
                     else:
                         colors.append('lightcoral')
+                        status_text.append('오답')
                 
-                bars = ax.bar(models, probs, color=colors, alpha=0.7)
-                ax.axhline(y=0.8, color='orange', linestyle='--', alpha=0.7, label='우수 기준 (80%)')
-                ax.set_ylim(0, 1)
-                ax.set_ylabel('예측 정답 확률')
-                ax.set_title('모델별 예측 정답 확률 비교', fontweight='bold')
-                ax.grid(True, alpha=0.3, axis='y')
-                ax.legend()
+                # Plotly 막대 차트
+                fig = go.Figure()
                 
-                # 막대 위에 확률 표시
-                for bar, prob in zip(bars, probs):
-                    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
-                           f'{prob:.1%}', ha='center', va='bottom', fontweight='bold')
+                fig.add_trace(go.Bar(
+                    x=models,
+                    y=probs,
+                    marker_color=colors,
+                    opacity=0.7,
+                    text=[f'{prob:.1%}' for prob in probs],
+                    textposition='outside',
+                    textfont=dict(size=12, color='black'),
+                    hovertemplate='<b>%{x}</b><br>정답 확률: %{y:.1%}<br>결과: %{customdata}<extra></extra>',
+                    customdata=status_text
+                ))
                 
-                plt.tight_layout()
-                st.pyplot(fig)
+                # 우수 기준선 추가
+                fig.add_hline(
+                    y=0.8,
+                    line_dash="dash",
+                    line_color="orange",
+                    opacity=0.7,
+                    annotation_text="우수 기준 (80%)",
+                    annotation_position="bottom right"
+                )
+                
+                fig.update_layout(
+                    title='모델별 예측 정답 확률 비교',
+                    xaxis_title='모델',
+                    yaxis_title='예측 정답 확률',
+                    yaxis=dict(range=[0, 1], tickformat='.0%'),
+                    height=400,
+                    showlegend=False
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
         
         else:
             st.info("**버튼을 클릭해서 테스트용 데이터 생성**")
