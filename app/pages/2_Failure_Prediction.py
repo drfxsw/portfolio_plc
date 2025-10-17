@@ -881,11 +881,6 @@ with tab3:
                 - 생성된 시점: {len(data['synthetic_data']):,}개 ({data['failure_day']}일분)
                 - 시퀀스 수: {len(data['y_sequences']):,}개
                 - 특성 수: 8개 (ch1, ch2 각 4개)
-                
-                **알람 기준**
-                - 주의: 일일 30% 이상 고장 신호
-                - 경고: 일일 50% 이상 고장 신호
-                - 위험: 일일 80% 이상 고장 신호
                 """)
             
             with col2:

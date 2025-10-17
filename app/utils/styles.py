@@ -342,6 +342,30 @@ def load_common_styles():
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
         
+        /* 소형 메트릭 스타일 - 더 강력한 선택자 */
+        .small-metrics [data-testid="metric-container"] {
+            background: rgba(102, 126, 234, 0.05) !important;
+            border-radius: 8px !important;
+            padding: 0.3rem !important;
+            margin: 0.1rem 0 !important;
+            border: 1px solid rgba(102, 126, 234, 0.1) !important;
+            transform: scale(0.8) !important;
+            transform-origin: left top !important;
+        }
+        
+        .small-metrics [data-testid="metric-container"] div {
+            font-size: 0.7rem !important;
+        }
+        
+        .small-metrics [data-testid="metric-container"] [data-testid="metric-value"] {
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+        }
+        
+        .small-metrics [data-testid="metric-container"] [data-testid="metric-label"] {
+            font-size: 0.6rem !important;
+        }
+        
         /* 성공/에러/경고 메시지 */
         .stSuccess {
             background: rgba(72, 187, 120, 0.1);

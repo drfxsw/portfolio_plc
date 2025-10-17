@@ -421,7 +421,7 @@ with tab3:
             st.session_state.prediction_done = False
         
         # 1단계: 데이터 생성 버튼
-        col1, col2, col3 = st.columns([3, 1, 1])
+        col1, col2 = st.columns([3, 1])
         with col1: 
             st.markdown("**Test 데이터에서 한 샘플씩 가져와서 3개 모델로 예측해보기**")
         with col2:
@@ -435,10 +435,6 @@ with tab3:
                 }
                 st.session_state.prediction_done = False
                 st.rerun()
-        
-        with col3:
-            if st.session_state.current_sample_idx is not None:
-                st.info(f"샘플 #{st.session_state.current_sample_idx + 1}")
         
         # 2단계: 현재 데이터 표시
         if st.session_state.current_data is not None:
@@ -459,17 +455,36 @@ with tab3:
                 st.dataframe(
                     preview_df.style.format({'Value': '{:.4f}'}),
                     use_container_width=True,
-                    height=300
+                    height=360
                 )
                 st.caption(f"전체 {len(current_X)}개 특성 중 처음 20개만 표시")
             
             with col2:
-                # 센서 데이터 요약 통계
-                st.metric("총 특성 수", f"{len(current_X)}개")
-                st.metric("평균값", f"{current_X.mean():.4f}")
-                st.metric("표준편차", f"{current_X.std():.4f}")
-                st.metric("최솟값", f"{current_X.min():.4f}")
-                st.metric("최댓값", f"{current_X.max():.4f}")
+                # 센서 데이터 요약 통계 (작은 크기)
+                st.markdown(f"""
+                <div style="display: grid; gap: 8px;">
+                    <div style="background: rgba(102, 126, 234, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.1);">
+                        <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">총 특성 수</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{len(current_X)}개</div>
+                    </div>
+                    <div style="background: rgba(102, 126, 234, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.1);">
+                        <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">평균값</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{current_X.mean():.4f}</div>
+                    </div>
+                    <div style="background: rgba(102, 126, 234, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.1);">
+                        <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">표준편차</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{current_X.std():.4f}</div>
+                    </div>
+                    <div style="background: rgba(102, 126, 234, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.1);">
+                        <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">최솟값</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{current_X.min():.4f}</div>
+                    </div>
+                    <div style="background: rgba(102, 126, 234, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(102, 126, 234, 0.1);">
+                        <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">최댓값</div>
+                        <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{current_X.max():.4f}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
             
             # 3단계: 예측하기 버튼
             st.markdown("---")
@@ -618,7 +633,7 @@ with tab3:
                     xaxis_title='모델',
                     yaxis_title='예측 정답 확률',
                     yaxis=dict(range=[0, 1], tickformat='.0%'),
-                    height=400,
+                    height=650,
                     showlegend=False
                 )
                 
