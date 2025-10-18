@@ -699,12 +699,12 @@ with tab3:
                     row=1, col=1
                 )
                 
-                # 고장 징후 구간 범례
+                # 설비 이상 징후 구간 범례
                 fig.add_trace(
                     go.Scatter(
                         x=[None], y=[None],
                         mode='lines',
-                        name='고장 징후 구간',
+                        name='설비 이상 징후 구간',
                         line=dict(color='pink', width=10),
                         opacity=0.3,
                         showlegend=True,
@@ -739,11 +739,11 @@ with tab3:
                     elif day < data['failure_day']:
                         daily_actual.append(0.80)  # 위험 (80%)
                     elif day == data['failure_day']:
-                        daily_actual.append(1.0)  # 고장 (100%)
+                        daily_actual.append(1.0)  # 설비 이상 (100%)
                     else:
                         daily_actual.append(np.nan)  # 데이터 없음
                 
-                # 실제 라벨 (고장일까지만)
+                # 실제 라벨 (설비 이상일까지만)
                 valid_days = [d for d in days if d <= data['failure_day']]
                 valid_actual = [daily_actual[j] for j in range(len(days)) if days[j] <= data['failure_day']]
                 
@@ -756,7 +756,7 @@ with tab3:
                         name='실제 라벨',
                         line=dict(color='black', dash='dash', width=2),
                         marker=dict(symbol='circle', size=6),
-                        hovertemplate='<b>실제 라벨</b><br>일: %{x}<br>고장 비율: %{y:.2%}<extra></extra>',
+                        hovertemplate='<b>실제 라벨</b><br>일: %{x}<br>설비 이상 비율: %{y:.2%}<extra></extra>',
                         showlegend=(i == 0),
                         legendgroup='actual'
                     ),
@@ -772,14 +772,14 @@ with tab3:
                         name=f'{model_name} 예측',
                         line=dict(color='blue', width=2),
                         marker=dict(symbol='square', size=6),
-                        hovertemplate=f'<b>{model_name} 예측</b><br>일: %{{x}}<br>고장 비율: %{{y:.2%}}<extra></extra>',
+                        hovertemplate=f'<b>{model_name} 예측</b><br>일: %{{x}}<br>설비 이상 비율: %{{y:.2%}}<extra></extra>',
                         showlegend=True,
                         legendgroup=f'pred_{model_name.lower()}'
                     ),
                     row=row, col=1
                 )
                 
-                # 고장 발생일 수직선 (각 서브플롯에 개별 추가)
+                # 설비 이상 발생일 수직선 (각 서브플롯에 개별 추가)
                 fig.add_shape(
                     type="line",
                     x0=data['failure_day'], x1=data['failure_day'],
@@ -789,7 +789,7 @@ with tab3:
                     row=row, col=1
                 )
                 
-                # 고장 징후 구간 배경
+                # 설비 이상 징후 구간 배경
                 fig.add_shape(
                     type="rect",
                     x0=data['failure_warning_start_day'], x1=data['failure_day'],
@@ -852,7 +852,7 @@ with tab3:
             )
             
             # Y축 설정
-            fig.update_yaxes(title_text="고장 비율", range=[-0.1, 1.1])
+            fig.update_yaxes(title_text="설비 이상 비율", range=[-0.1, 1.1])
             
             # X축 설정 (마지막 서브플롯에만)
             fig.update_xaxes(title_text="시간 (일)", row=3, col=1)
@@ -861,9 +861,9 @@ with tab3:
             st.plotly_chart(fig, use_container_width=True)
             
             st.info(
-                   f"일별 288개 측정 중 고장 신호 비율로 평균을 계산했습니다. "
+                   f"일별 288개 측정 중 설비 이상 신호 비율로 평균을 계산했습니다. "
                    f"배경색: 주의(노랑), 경고(주황), 위험(빨강). "
-                   f"고장 징후는 {data['failure_warning_start_day']}일부터 {data['failure_day']}일까지 발생합니다."
+                   f"설비 이상 징후는 {data['failure_warning_start_day']}일부터 {data['failure_day']}일까지 발생합니다."
             )
 
             st.markdown("---")
@@ -875,7 +875,7 @@ with tab3:
                 st.markdown(f"""
                 **시뮬레이션 설정**
                 - 총 기간: 30일
-                - 고장 시점: {data['failure_day']}일
+                - 설비 이상 시점: {data['failure_day']}일
                 - 측정 간격: 5분
                 - 일일 측정: 288회
                 
@@ -888,14 +888,14 @@ with tab3:
             with col2:
                 st.markdown(f"""
                 **알람 기준**
-                - 주의: 일일 30% 이상 고장 신호
-                - 경고: 일일 50% 이상 고장 신호
-                - 위험: 일일 80% 이상 고장 신호
+                - 주의: 일일 30% 이상 설비 이상 신호
+                - 경고: 일일 50% 이상 설비 이상 신호
+                - 위험: 일일 80% 이상 설비 이상 신호
                 
                 **실용성 평가**
                 - 30일 장기 모니터링 시뮬레이션
                 - 3단계 알람 시스템 (주의/경고/위험)
-                - 일별 고장 비율 기반 판단
+                - 일별 설비 이상 비율 기반 판단
                 - 오경보 최소화 전략 적용
                 """)
     

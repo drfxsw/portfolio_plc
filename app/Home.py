@@ -23,10 +23,10 @@ col1, col2 = st.columns(2, gap="large")
 with col1:
     st.markdown("""
     <div class="industrial-card card-ml">
-        <div class="card-header">Product Defect Detection</div>
+        <div class="card-header">제조 공정 품질 이상 감지</div>
         <div class="card-type type-ml">Machine Learning</div>
         <div class="card-description">
-            반도체 제조 공정에서 센서 데이터를 기반으로 불량품을 사전에 탐지하는 예측 시스템
+            반도체 제조 공정에서 센서 데이터를 기반으로 품질 이상을 사전에 탐지하는 예측 시스템
         </div>
         <div class="performance-badge">
             Random Forest 94.7% Accuracy
@@ -42,10 +42,10 @@ with col1:
 with col2:
     st.markdown("""
     <div class="industrial-card card-dl">
-        <div class="card-header">Equipment Failure Prediction</div>
+        <div class="card-header">설비 이상 감지</div>
         <div class="card-type type-dl">Deep Learning</div>
         <div class="card-description">
-            베어링 진동 패턴 분석을 통한 설비 고장 사전 예측 및 예방 정비 시스템
+            베어링 진동 패턴 분석을 통한 설비 이상 사전 예측 및 예방 정비 시스템
         </div>
         <div class="performance-badge">
             GRU Model 98.2% Accuracy
