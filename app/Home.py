@@ -7,7 +7,8 @@ from utils.styles import load_common_styles, create_home_header
 st.set_page_config(
     page_title="Manufacturing AI Portfolio",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items=None
 )
 
 # 공통 스타일 로드
