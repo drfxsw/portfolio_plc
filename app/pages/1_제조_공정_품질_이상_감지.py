@@ -24,7 +24,8 @@ from utils.styles import load_common_styles, create_page_header, create_metric_c
 st.set_page_config(
     page_title="Defect Prediction System",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items=None
 )
 
 # 공통 스타일 로드
