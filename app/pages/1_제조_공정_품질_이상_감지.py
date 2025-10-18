@@ -22,7 +22,7 @@ from utils.styles import load_common_styles, create_page_header, create_metric_c
 
 # 페이지 설정
 st.set_page_config(
-    page_title="Defect Prediction System",
+    page_title="Manufacturing Process Quality Anomaly Detection",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items=None
@@ -43,8 +43,8 @@ data_path = os.path.join(project_root, "project_defect", "processed_data")
 
 # 페이지 헤더
 create_page_header(
-    "Product Defect Detection",
-    "반도체 제조 공정 센서 데이터 기반 불량품 조기 탐지 (Machine Learning)"
+    "제조 공정 품질 이상 감지",
+    "반도체 제조 공정 센서 데이터 기반 품질 이상 조기 탐지 (Machine Learning)"
 )
 
 # 탭 생성
@@ -59,16 +59,16 @@ with tab1:
     with col1:
         st.subheader("프로젝트 목표")
         st.markdown("""
-        - **목적**: 반도체 제조 공정에서 불량품 조기 탐지
+        - **목적**: 반도체 제조 공정에서 품질 이상 조기 탐지
         - **데이터**: SECOM 센서 데이터 (UCI Repository)
         - **방법**: 머신러닝 모델 비교
-        - **핵심**: Recall 최대화 (불량품 놓치지 않기)
+        - **핵심**: Recall 최대화 (품질 이상 놓치지 않기)
         """)
         
         st.subheader("주요 성과")
         st.markdown("""
         - **Recall 개선**: 19.05% → 57.14% (+38.09%p)
-        - **불량 탐지**: 21개 중 12개 성공 탐지
+        - **품질 이상 탐지**: 21개 중 12개 성공 탐지
         - **최종 모델**: Random Forest
         """)
     
@@ -102,7 +102,7 @@ with tab1:
     with col3:
         st.metric("정상 비율", "93.4%")
     with col4:
-        st.metric("불량 비율", "6.6%")
+        st.metric("이상 비율", "6.6%")
     
     st.markdown("---")
     
@@ -306,8 +306,8 @@ with tab2:
                 fig.add_trace(
                     go.Heatmap(
                         z=cm,
-                        x=['정상', '불량'],
-                        y=['정상', '불량'],
+                        x=['정상', '이상'],
+                        y=['정상', '이상'],
                         colorscale='Blues',
                         showscale=(i == 2),  # 마지막에만 컬러바 표시
                         hovertemplate='실제: %{y}<br>예측: %{x}<br>개수: %{z}<extra></extra>',
@@ -345,14 +345,14 @@ with tab2:
             
             1. **Random Forest 최고 성능**
                - Recall: 57.14% (목표에 가장 근접)
-               - 21개 불량 중 12개 탐지 성공
+               - 21개 품질 이상 중 12개 탐지 성공
             
             2. **시간 Feature의 중요성**
                - 시간 정보 추가로 19%p 성능 향상
                - 제조 공정의 시간적 패턴 존재
             
             3. **클래스 불균형 영향**
-               - 불량 비율 6.6%로 매우 낮음
+               - 품질 이상 비율 6.6%로 매우 낮음
                - Precision보다 Recall 우선 최적화
             """)
         
@@ -362,7 +362,7 @@ with tab2:
             
             1. **아직 부족한 Recall**
                - 현재 57.14% (목표 60%)
-               - 9개 불량품 여전히 놓침
+               - 9개 품질 이상품 여전히 놓침
             
             2. **낮은 Precision**
                - Random Forest 42.86%
@@ -377,7 +377,7 @@ with tab2:
 # ========================= TAB 3: End-to-End 시스템 =========================
 with tab3:
     st.header("End-to-End 예측 시스템")
-    st.markdown("테스트 데이터를 불러와 불량확률을 예측합니다.")
+    st.markdown("테스트 데이터를 불러와 품질 이상 확률을 예측합니다.")
     
     # 모델 로드
     @st.cache_resource
@@ -413,7 +413,7 @@ with tab3:
     X_test, y_test = load_secom_data()
     
     if all([model_logistic, model_rf, model_xgb, scaler]) and X_test is not None:
-        st.subheader("불량 예측 시뮬레이션")
+        st.subheader("품질 이상 예측 시뮬레이션")
         # 세션 상태 초기화
         if 'current_sample_idx' not in st.session_state:
             st.session_state.current_sample_idx = None
@@ -510,8 +510,8 @@ with tab3:
                 
                 # 예측 확신도 (해당 예측이 맞을 확률)
                 def get_prediction_confidence(model, X, prediction, results):
-                    if prediction == 1:  # 불량으로 예측한 경우
-                        return results['precision']  # Precision: 불량 예측 중 실제 불량 비율
+                    if prediction == 1:  # 품질 이상으로 예측한 경우
+                        return results['precision']  # Precision: 품질 이상 예측 중 실제 품질 이상 비율
                     else:  # 정상으로 예측한 경우
                         # NPV (Negative Predictive Value): 정상 예측 중 실제 정상 비율
                         # NPV = TN / (TN + FN)
@@ -533,14 +533,14 @@ with tab3:
                 with col1:
                     if y_actual == 1:
                         st.error("**실제 정답**")
-                        st.error("불량")
+                        st.error("품질 이상")
                     else:
                         st.success("**실제 정답**")
                         st.success("정상")
                 
                 with col2:
                     st.info("**Logistic Regression**")
-                    pred_text = "불량" if pred_logistic == 1 else "정상"
+                    pred_text = "품질 이상" if pred_logistic == 1 else "정상"
                     is_correct = pred_logistic == y_actual
                     if is_correct:
                         st.success(f"{pred_text}")
@@ -551,7 +551,7 @@ with tab3:
                 
                 with col3:
                     st.info("**Random Forest**")
-                    pred_text = "불량" if pred_rf == 1 else "정상"
+                    pred_text = "품질 이상" if pred_rf == 1 else "정상"
                     is_correct = pred_rf == y_actual
                     if is_correct:
                         st.success(f"{pred_text}")
@@ -562,7 +562,7 @@ with tab3:
                 
                 with col4:
                     st.info("**XGBoost**")
-                    pred_text = "불량" if pred_xgb == 1 else "정상"
+                    pred_text = "품질 이상" if pred_xgb == 1 else "정상"
                     is_correct = pred_xgb == y_actual
                     if is_correct:
                         st.success(f"{pred_text}")

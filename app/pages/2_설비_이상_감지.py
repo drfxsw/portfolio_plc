@@ -29,7 +29,7 @@ from utils.styles import load_common_styles, create_page_header, create_metric_c
 
 # 페이지 설정
 st.set_page_config(
-    page_title="Failure Prediction System",
+    page_title="설비 이상 감지 시스템",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items=None
@@ -37,7 +37,7 @@ st.set_page_config(
 
 # 공통 스타일 로드 및 페이지 헤더
 load_common_styles()
-create_page_header("Deep Learning Failure Prediction", "Predictive Maintenance with LSTM")
+create_page_header("설비 이상 감지", "LSTM을 활용한 예지보전")
 
 # 한글 폰트 설정
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -47,7 +47,7 @@ plt.rcParams['axes.unicode_minus'] = False
 model_path = "../project_failure/models/"
 
 # 메인 타이틀
-st.title("장비 고장 예측 시스템")
+st.title("설비 이상 감지 시스템")
 # 탭 생성
 tab1, tab2, tab3 = st.tabs(["프로젝트 정보", "성능 분석", "End-to-End 시스템"])
 
@@ -60,17 +60,17 @@ with tab1:
     with col1:
         st.subheader("프로젝트 목표")
         st.markdown("""
-        - **목적**: 산업 장비의 고장 예측 및 예방 정비
+        - **목적**: 산업 장비의 이상 예측 및 예방 정비
         - **데이터**: NASA의 Bearing 진동 센서 데이터
         - **방법**: 딥러닝 시계열 모델 비교
-        - **핵심**: 고장 전 조기 경고 시스템 구축
+        - **핵심**: 설비 이상 전 조기 경고 시스템 구축
         """)
         
         st.subheader("주요 성과")
         st.markdown("""
         - **최고 성능**: GRU 모델 (98.17% 정확도)
-        - **Recall**: 100% (모든 고장 상황 탐지)
-        - **조기 경고**: 고장 전 미리 감지 가능
+        - **Recall**: 100% (모든 설비 이상 상황 탐지)
+        - **조기 경고**: 설비 이상 전 미리 감지 가능
         - **실시간 예측**: 연속 센서 데이터 처리
         """)
     
@@ -103,7 +103,7 @@ with tab1:
     with col3:
         st.metric("정상 비율", "84.13%")
     with col4:
-        st.metric("고장 비율", "15.87%")
+        st.metric("설비 이상 비율", "15.87%")
     
     st.markdown("---")
     
@@ -114,7 +114,7 @@ with tab1:
         "1. 시계열 윈도우": "10일 단위로 분할 (과거 10일로 오늘 예측)",
         "2. 센서 특성": "베어링 진동 센서의 다양한 통계적 특성",
         "3. 정규화": "StandardScaler로 평균 0, 분산 1 정규화",
-        "4. 레이블 생성": "고장 6일 이내면 고장(1), 아니면 정상(0)",
+        "4. 레이블 생성": "설비 이상 6일 이내면 이상(1), 아니면 정상(0)",
         "5. 3D 텐서": "(samples, 10, 32) 형태"
     }
     
@@ -269,8 +269,8 @@ with tab2:
             for i, (result, name) in enumerate(zip(results_list, model_names)):
                 cm = np.array(result['confusion_matrix'])
                 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                           xticklabels=['정상', '고장'],
-                           yticklabels=['정상', '고장'],
+                           xticklabels=['정상', '설비 이상'],
+                           yticklabels=['정상', '설비 이상'],
                            ax=axes[i])
                 axes[i].set_title(f'{name} Confusion Matrix')
                 axes[i].set_xlabel('예측')
@@ -293,7 +293,7 @@ with tab2:
             1. **GRU 모델 최고 성능**
                - 정확도: 98.17% (3개 모델 중 최고)
                - 정밀도: 97.78% (거짓 경보 최소화)
-               - 재현율: 90.26% (대부분 고장 사전 탐지)
+               - 재현율: 90.26% (대부분 설비 이상 사전 탐지)
             
             2. **효율적 학습**
                - 23% 적은 파라미터로 우수한 성능
@@ -302,7 +302,7 @@ with tab2:
             
             3. **실무 적용 가치**
                - 거짓 경보 4개로 운영 효율성 극대화
-               - 90.26% 재현율로 대부분 고장 사전 탐지
+               - 90.26% 재현율로 대부분 설비 이상 사전 탐지
                - 실제 제조업 현장 적용 가능한 실용적 성능
             """)
         
@@ -333,8 +333,8 @@ with tab2:
 
    # ========================= TAB 3: End-to-End 시스템 =========================
 with tab3:
-    st.header("End-to-End 고장 예측 시스템")
-    st.markdown("가상 베어링 데이터를 생성하고 고장시점을 예측합니다.")
+    st.header("End-to-End 설비 이상 감지 시스템")
+    st.markdown("가상 베어링 데이터를 생성하고 설비 이상 시점을 예측합니다.")
     
     # 모델 로드 함수
     @st.cache_resource
@@ -366,12 +366,12 @@ with tab3:
         
         with col1:
             failure_day = st.slider(
-                "고장 발생 시점 (일)",
+                "설비 이상 발생 시점 (일)",
                 min_value=5,
                 max_value=30,
                 value=25,
                 step=1,
-                help="이 시점에 장비가 고장납니다"
+                help="이 시점에 설비 이상이 발생합니다"
             )
         
         with col2:
@@ -384,7 +384,7 @@ with tab3:
             if 'prediction_results' in st.session_state:
                 del st.session_state.prediction_results
             
-            # 정상/고장 데이터 특성 범위 (실제 데이터 기반)
+            # 정상/설비 이상 데이터 특성 범위 (실제 데이터 기반)
             normal_ranges = {
                 'rms': (0.062242, 0.237261, 0.148823, 0.010883),
                 'peak': (0.312, 2.8, 0.673632, 0.125524),
@@ -399,45 +399,45 @@ with tab3:
                 'kurtosis': (0.277354, 71.579558, 4.618403, 7.498321)
             }
             
-            # 가상 데이터 생성 (5분 간격, 고장일까지만)
+            # 가상 데이터 생성 (5분 간격, 설비 이상일까지만)
             np.random.seed(int(time.time()))
             
             measurements_per_hour = 12  # 5분 간격
             measurements_per_day = 288  # 24시간 × 12
-            total_measurements = failure_day * measurements_per_day  # 고장일까지만
+            total_measurements = failure_day * measurements_per_day  # 설비 이상일까지만
             features = 8  # ch1-ch2의 4가지 통계 = 8개 특성
             
             synthetic_data = []
             labels = []
             
-            # 알람 단계별 목표 고장 비율 설정
-            # 고장일 기준 역산
+            # 알람 단계별 목표 설비 이상 비율 설정
+            # 설비 이상일 기준 역산
             failure_warning_start_day = max(1, failure_day - 5)  # 위험 알람 시작 (5일간)
             transition_start_day = max(1, failure_warning_start_day - 3)  # 경고 시작 (3일 전)
             caution_start_day = max(1, transition_start_day - 1)  # 주의 시작 (1일 전)
             
-            # 고장일까지만 데이터 생성
+            # 설비 이상일까지만 데이터 생성
             for i in range(total_measurements):
                 current_day = (i // measurements_per_day) + 1  # 현재 일수 (1부터 시작)
                 
-                # 각 일별 목표 고장 신호 비율
+                # 각 일별 목표 설비 이상 신호 비율
                 if current_day < caution_start_day:
                     # 완전 정상
                     failure_ratio = 0.0
                 elif current_day < transition_start_day:
-                    # 주의 단계 (30% 고장 신호)
+                    # 주의 단계 (30% 설비 이상 신호)
                     failure_ratio = 0.30
                 elif current_day < failure_warning_start_day:
-                    # 경고 단계 (50% 고장 신호, 3일간)
+                    # 경고 단계 (50% 설비 이상 신호, 3일간)
                     failure_ratio = 0.50
                 elif current_day < failure_day:
-                    # 위험 단계 (80% 고장 신호, 고장 전날까지)
+                    # 위험 단계 (80% 설비 이상 신호, 설비 이상 전날까지)
                     failure_ratio = 0.80
                 else:
-                    # 고장 당일 (100% 고장 신호)
+                    # 설비 이상 당일 (100% 설비 이상 신호)
                     failure_ratio = 1.0
                 
-                # 확률적으로 정상/고장 데이터 선택
+                # 확률적으로 정상/설비 이상 데이터 선택
                 if np.random.random() < failure_ratio:
                     ranges = failure_ranges
                     label = 1
@@ -512,7 +512,7 @@ with tab3:
                     'measurements_per_day': measurements_per_day
                 }
                 
-                st.info(f"{failure_day}일에 고장 발생 (장비 정지)")
+                st.info(f"{failure_day}일에 설비 이상 발생 (장비 정지)")
                 st.info(f"{failure_warning_start_day}일부터 '위험' 알람 시작")
             else:
                 st.error("시퀀스 생성 실패")
@@ -553,7 +553,7 @@ with tab3:
             
             # 일별 알람 레벨 계산 함수
             def calculate_daily_alarm_levels(predictions, time_indices, measurements_per_day, total_days):
-                """일별 고장 신호 비율로 알람 레벨 계산"""
+                """일별 설비 이상 신호 비율로 알람 레벨 계산"""
                 daily_levels = {}
                 
                 for day in range(total_days):
@@ -686,12 +686,12 @@ with tab3:
             
             # 범례용 invisible traces 추가 (첫 번째 서브플롯에만)
             if True:  # 항상 실행
-                # 고장 발생일 범례
+                # 설비 이상 발생일 범례
                 fig.add_trace(
                     go.Scatter(
                         x=[None], y=[None],
                         mode='lines',
-                        name='고장 발생일',
+                        name='설비 이상 발생일',
                         line=dict(color='red', dash='dash', width=2),
                         showlegend=True,
                         legendgroup='failure_day'
