@@ -98,7 +98,7 @@ with tab1:
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("시계열 길이", "10일")
+        st.metric("총 샘플 수", "20,480개")
     with col2:
         st.metric("특성 수", "32개")
     with col3:
