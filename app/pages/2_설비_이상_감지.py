@@ -37,7 +37,8 @@ st.set_page_config(
 
 # 공통 스타일 로드 및 페이지 헤더
 load_common_styles()
-create_page_header("설비 이상 감지", "LSTM을 활용한 예지보전")
+create_page_header("설비 이상 감지",
+                    "베어링 진동데이터 기반 이상 예측 및 예방 정비를 위한 딥러닝 활용 시계열 분석 시스템")
 
 # 한글 폰트 설정
 plt.rcParams['font.family'] = 'Malgun Gothic'
@@ -69,7 +70,7 @@ with tab1:
         st.subheader("주요 성과")
         st.markdown("""
         - **최고 성능**: GRU 모델 (98.17% 정확도)
-        - **Recall**: 100% (모든 설비 이상 상황 탐지)
+        - **Recall**: 90.26% (대부분 설비 이상 사전 탐지)
         - **조기 경고**: 설비 이상 전 미리 감지 가능
         - **실시간 예측**: 연속 센서 데이터 처리
         """)
@@ -87,7 +88,7 @@ with tab1:
         
         **시각화**
         - Matplotlib, Seaborn
-        - Streamlit (웹 대시보드)
+        - Streamlit, Plotly (웹 대시보드)
         """)
     
     st.markdown("---")
