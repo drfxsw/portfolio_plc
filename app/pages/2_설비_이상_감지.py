@@ -512,8 +512,7 @@ with tab3:
                     'measurements_per_day': measurements_per_day
                 }
                 
-                st.info(f"{failure_day}일에 설비 이상 발생 (장비 정지)")
-                st.info(f"{failure_warning_start_day}일부터 '위험' 알람 시작")
+                st.info(f"{failure_day}일에 설비 이상 발생 (장비 정지), {failure_warning_start_day}일부터 '위험' 알람 시작")
             else:
                 st.error("시퀀스 생성 실패")
         

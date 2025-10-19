@@ -1,0 +1,57 @@
+# Home.py - 메인 페이지
+
+import streamlit as st
+from utils.styles import load_common_styles, create_home_header
+
+# 페이지 설정
+st.set_page_config(
+    page_title="Manufacturing AI Portfolio",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items=None
+)
+
+# 공통 스타일 로드
+load_common_styles()
+
+# 메인 헤더
+create_home_header()
+
+# 프로젝트 카드들 (수평 정렬)
+col1, col2 = st.columns(2, gap="large")
+
+with col1:
+    st.markdown("""
+    <div class="industrial-card card-ml">
+        <div class="card-header">제조 공정 품질 이상 감지</div>
+        <div class="card-type type-ml">Machine Learning</div>
+        <div class="card-description">
+            반도체 제조 공정에서 센서 데이터를 기반으로 품질 이상을 사전에 탐지하는 예측 시스템
+        </div>
+        <div class="performance-badge">84.39% Accuracy · Recall 19.05%</div>
+        <div class="tech-stack">
+            <span class="tech-badge">Random Forest</span>
+            <span class="tech-badge">XGBoost</span>
+            <span class="tech-badge">Scikit-learn</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown("""
+    <div class="industrial-card card-dl">
+        <div class="card-header">설비 이상 감지</div>
+        <div class="card-type type-dl">Deep Learning</div>
+        <div class="card-description">
+            베어링 진동 패턴 분석을 통한 설비 이상 사전 예측 및 예방 정비 시스템
+        </div>
+        <div class="performance-badge">
+            GRU Model 98.2% Accuracy
+        </div>
+        <div class="tech-stack">
+            <span class="tech-badge">LSTM</span>
+            <span class="tech-badge">GRU</span>
+            <span class="tech-badge">TensorFlow</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
