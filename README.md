@@ -40,14 +40,16 @@ portfolio_plc/
 │   └── utils/                    # 공통 스타일·유틸리티
 │       └── styles.py
 ├── project_defect/               # 프로젝트 1: 품질 이상 감지 (ML)
+│   ├── data/                     # 원본 센서 데이터
+│   ├── processed_data/           # 전처리된 데이터 (train/test split)
+│   ├── models/                   # 학습된 모델 (.pkl)
 │   ├── researching/              # Jupyter 실험 노트북 (01~06)
-│   ├── models/                   # 학습된 모델·결과 파일
-│   ├── data/                     # 원본·전처리 데이터
 │   └── README.md                 # 프로젝트별 상세 문서
 ├── project_failure/              # 프로젝트 2: 설비 이상 감지 (DL)
+│   ├── data/                     # 원본 진동 센서 데이터
+│   ├── processed_data/           # 전처리된 시계열 데이터
+│   ├── models/                   # 학습된 모델 (.h5, .keras)
 │   ├── researching/              # Jupyter 실험 노트북 (01~06)
-│   ├── models/                   # 학습된 모델·결과 파일
-│   ├── data/                     # 원본·전처리 데이터
 │   └── README.md                 # 프로젝트별 상세 문서
 ├── tools/                        # 자동화 스크립트
 │   ├── run_all_notebooks.py      # 노트북 일괄 실행
@@ -165,8 +167,8 @@ streamlit run app/Home.py
 ## References
 
 - **데이터셋**:
-  - SECOM Dataset: [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/SECOM)
-  - NASA Bearing Dataset: [NASA Prognostics Center of Excellence](https://ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/)
+  - [SECOM Dataset - Kaggle](https://www.kaggle.com/datasets/paresh2047/uci-semcom)
+  - [IMS Bearing Dataset - Kaggle](https://www.kaggle.com/datasets/vinayak123tyagi/bearing-dataset)
 - **프레임워크**: Streamlit, TensorFlow, Scikit-learn, XGBoost
 - **배포**: Streamlit Cloud
 
