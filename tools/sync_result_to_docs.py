@@ -1,7 +1,6 @@
 import json
 import pickle
 import re
-import shutil
 from pathlib import Path
 import nbformat
 
@@ -80,8 +79,6 @@ def update_readme(readme_path: Path, models_order, results):
     if not readme_path.exists():
         print("  README missing:", readme_path)
         return
-    bak = readme_path.with_suffix(".md.bak")
-    shutil.copy2(readme_path, bak)
     txt = readme_path.read_text(encoding="utf-8")
 
     # 1. 프로젝트 요약 테이블의 결과 열 업데이트
@@ -154,8 +151,6 @@ def update_notebook_conclusion(nb_path: Path, results, models_order):
     if not nb_path.exists():
         print("  Notebook not found:", nb_path)
         return
-    bak = nb_path.with_suffix(".ipynb.bak")
-    shutil.copy2(nb_path, bak)
     nb = nbformat.read(nb_path, as_version=4)
     updated = False
     
