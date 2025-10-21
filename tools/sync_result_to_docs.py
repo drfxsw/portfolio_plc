@@ -157,49 +157,6 @@ def update_notebook_conclusion(nb_path: Path, results, models_order):
     else:
         print("  No '# 최종 결론' markdown cell found in", nb_path)
 
-def update_home_and_pages(card_marker, results, prefer):
-    # helper to produce badge string
-    def badge_text(prefer_list):
-        rep = None
-        for p in prefer_list:
-            if p in results:
-                rep = results[p]; break
-        if rep is None and results:
-            rep = next(iter(results.values()))
-        if rep is None:
-            return "N/A Accuracy · Recall N/A"
-        return f"{pct(rep.get('accuracy'))} Accuracy · Recall {pct(rep.get('recall'))}"
-
-    # Home.py
-    home = BASE / "app" / "Home.py"
-    if home.exists():
-        s = home.read_text(encoding="utf-8")
-        bak = home.with_suffix(".py.bak")
-        shutil.copy2(home, bak)
-        # replace inner text of performance-badge for matching card header robustly
-        pattern = (
-            rf"(<div\s+class=[\"']card-header[\"']\s*>{re.escape(card_marker)}</div>[\s\S]*?"
-            rf"<div\s+class=[\"']performance-badge[\"']\s*>)([\s\S]*?)(</div>)"
-        )
-        new_s, n = re.subn(pattern, lambda m: m.group(1) + badge_text(prefer) + m.group(3), s, flags=re.MULTILINE)
-        if n:
-            home.write_text(new_s, encoding="utf-8")
-            print("  app/Home.py updated")
-        else:
-            print("  app/Home.py: pattern not found or unchanged")
-    # pages
-    pages_dir = BASE / "app" / "pages"
-    if pages_dir.exists():
-        for p in pages_dir.glob("*.py"):
-            txt = p.read_text(encoding="utf-8")
-            if card_marker in txt:
-                bak = p.with_suffix(".py.bak")
-                shutil.copy2(p, bak)
-                new_txt, n = re.subn(pattern, lambda m: m.group(1) + badge_text(prefer) + m.group(3), txt, flags=re.MULTILINE)
-                if n:
-                    p.write_text(new_txt, encoding="utf-8")
-                    print("  app/pages updated:", p.name)
-
 def main():
     for proj, cfg in PROJECTS.items():
         print(f"\n=== Syncing project: {proj} ===")
@@ -227,11 +184,18 @@ def main():
             else:
                 nk = kk
             normalized[nk] = v
+        
+        # README.md 업데이트
         update_readme(cfg["readme"], cfg["prefer"], normalized)
+        
+        # 06_model_comparison.ipynb 노트북 업데이트
         nb = BASE / proj / "researching" / "06_model_comparison.ipynb"
         update_notebook_conclusion(nb, normalized, cfg["prefer"])
-        update_home_and_pages(cfg["card_marker"], normalized, cfg["prefer"])
-    print("\nSync complete.")
+        
+        print(f"  {proj}: README.md and 06_model_comparison.ipynb updated")
+    
+    print("\nSync complete - README and notebooks only.")
+    print("Note: Home.py and pages/ now use dynamic loading from pkl files.")
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,41 @@
 # Home.py - 메인 페이지
 
 import streamlit as st
+import pickle
+import os
 from utils.styles import load_common_styles, create_home_header
+
+# 결과 파일 로드 함수
+@st.cache_data
+def load_model_results():
+    """모델 성능 결과를 로드합니다."""
+    results = {}
+    
+    # 제조 공정 품질 이상 감지 (Random Forest 최고 성능)
+    defect_path = os.path.join('..', 'project_defect', 'models', 'results_rf.pkl')
+    if os.path.exists(defect_path):
+        with open(defect_path, 'rb') as f:
+            results['defect'] = pickle.load(f)
+    else:
+        # 백업 경로
+        defect_path = os.path.join('project_defect', 'models', 'results_rf.pkl')
+        if os.path.exists(defect_path):
+            with open(defect_path, 'rb') as f:
+                results['defect'] = pickle.load(f)
+    
+    # 설비 이상 감지 (GRU 최고 성능) 
+    failure_path = os.path.join('..', 'project_failure', 'models', 'results_gru.pkl')
+    if os.path.exists(failure_path):
+        with open(failure_path, 'rb') as f:
+            results['failure'] = pickle.load(f)
+    else:
+        # 백업 경로
+        failure_path = os.path.join('project_failure', 'models', 'results_gru.pkl')
+        if os.path.exists(failure_path):
+            with open(failure_path, 'rb') as f:
+                results['failure'] = pickle.load(f)
+    
+    return results
 
 # 페이지 설정
 st.set_page_config(
@@ -16,6 +50,22 @@ load_common_styles()
 
 # 메인 헤더
 create_home_header()
+
+# 모델 결과 로드
+model_results = load_model_results()
+
+# 성능 지표 추출 (기본값 설정)
+if 'defect' in model_results:
+    defect_accuracy = model_results['defect'].get('test_accuracy', 0.8630) * 100
+    defect_recall = model_results['defect'].get('test_recall', 0.5714) * 100
+else:
+    defect_accuracy, defect_recall = 86.30, 57.14
+
+if 'failure' in model_results:
+    failure_accuracy = model_results['failure'].get('accuracy', 0.9817) * 100
+    failure_recall = model_results['failure'].get('recall', 0.9026) * 100
+else:
+    failure_accuracy, failure_recall = 98.17, 90.26
 
 # 프로젝트 카드들 (수평 정렬)
 col1, col2 = st.columns(2, gap="medium")
@@ -36,12 +86,12 @@ with col1:
             </ul>
             <strong>주요 성과</strong>
             <ul>
-              <li>Test Accuracy: 86.30% · Recall: 57.14% (Random Forest)</li>
+              <li>Test Accuracy: {defect_accuracy:.2f}% · Recall: {defect_recall:.2f}% (Random Forest)</li>
               <li>불량 탐지 개선: 기존 대비 탐지 +8건 (47% 감소)</li>
             </ul>
             <strong>재현성·배포</strong>: 노트북(.ipynb)로 재현 가능, Streamlit 데모·모델 pickle 제공
         </div>
-        <div class="performance-badge">86.30% Accuracy · Recall 57.14%</div>
+        <div class="performance-badge">{defect_accuracy:.2f}% Accuracy · Recall {defect_recall:.2f}%</div>
         <div class="tech-stack">
             <span class="tech-badge">Python</span>
             <span class="tech-badge">Pandas</span>
@@ -66,12 +116,12 @@ with col2:
             </ul>
             <strong>주요 성과</strong>
             <ul>
-              <li>Test Accuracy: 98.17% · Recall: 90.26% (GRU)</li>
+              <li>Test Accuracy: {failure_accuracy:.2f}% · Recall: {failure_recall:.2f}% (GRU)</li>
               <li>거짓 경보 최소화(운영 비용 저감) 및 실시간 적용 가능성 확인</li>
             </ul>
             <strong>재현성·배포</strong>: 학습 스크립트 및 실행 노트북 제공, Streamlit 데모로 시연 가능
         </div>
-        <div class="performance-badge">98.17% Accuracy · Recall 90.26%</div>
+        <div class="performance-badge">{failure_accuracy:.2f}% Accuracy · Recall {failure_recall:.2f}%</div>
         <div class="tech-stack">
             <span class="tech-badge">TensorFlow</span>
             <span class="tech-badge">LSTM/GRU</span>

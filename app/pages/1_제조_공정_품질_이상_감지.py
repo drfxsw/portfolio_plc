@@ -41,6 +41,21 @@ project_root = os.path.join(current_dir, "..", "..")
 model_path = os.path.join(project_root, "project_defect", "models")
 data_path = os.path.join(project_root, "project_defect", "processed_data")
 
+# 성능 결과 로드
+@st.cache_data
+def load_results():
+    try:
+        results_logistic = joblib.load(os.path.join(model_path, 'results_logistic.pkl'))
+        results_rf = joblib.load(os.path.join(model_path, 'results_rf.pkl')) 
+        results_xgb = joblib.load(os.path.join(model_path, 'results_xgb.pkl'))
+        return results_logistic, results_rf, results_xgb
+    except Exception as e:
+        st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
+        return None, None, None
+
+# 결과 로드
+results_logistic, results_rf, results_xgb = load_results()
+
 # 페이지 헤더
 create_page_header(
     "제조 공정 품질 이상 감지",
@@ -66,7 +81,18 @@ with tab1:
         """)
         
         st.subheader("주요 성과")
-        st.markdown("""
+        # 동적 성능 지표 사용
+        if results_rf:
+            rf_recall = results_rf.get('test_recall', 0.5714) * 100
+            logistic_recall = results_logistic.get('test_recall', 0.1905) * 100 if results_logistic else 19.05
+            improvement = rf_recall - logistic_recall
+            st.markdown(f"""
+        - **Recall 개선**: {logistic_recall:.2f}% → {rf_recall:.2f}% (+{improvement:.2f}%p)
+        - **품질 이상 탐지**: 21개 중 12개 성공 탐지
+        - **최종 모델**: Random Forest
+        """)
+        else:
+            st.markdown("""
         - **Recall 개선**: 19.05% → 57.14% (+38.09%p)
         - **품질 이상 탐지**: 21개 중 12개 성공 탐지
         - **최종 모델**: Random Forest
@@ -128,21 +154,25 @@ with tab1:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("""
+        # 동적 성능 지표 사용
+        logistic_recall_pct = results_logistic.get('test_recall', 0.1905) * 100 if results_logistic else 19.05
+        st.markdown(f"""
         **Logistic Regression**
         - 베이스라인 모델
         - 선형 관계 학습
         - 빠른 학습, 해석 용이
-        - Recall: 19.05%
+        - Recall: {logistic_recall_pct:.2f}%
         """)
     
     with col2:
-        st.markdown("""
+        # 동적 성능 지표 사용
+        rf_recall_pct = results_rf.get('test_recall', 0.5714) * 100 if results_rf else 57.14
+        st.markdown(f"""
         **Random Forest** (최종 선택)
         - 최종 선택 모델
         - 앙상블 방법
         - 비선형 패턴 포착
-        - Recall: 57.14%
+        - Recall: {rf_recall_pct:.2f}%
         """)
     
     with col3:
@@ -157,20 +187,6 @@ with tab1:
 # ========================= TAB 2: 성능 분석 =========================
 with tab2:
     st.header("성능 분석")
-    
-    # 성능 결과 로드
-    @st.cache_data
-    def load_results():
-        try:
-            results_logistic = joblib.load(os.path.join(model_path, 'results_logistic.pkl'))
-            results_rf = joblib.load(os.path.join(model_path, 'results_rf.pkl')) 
-            results_xgb = joblib.load(os.path.join(model_path, 'results_xgb.pkl'))
-            return results_logistic, results_rf, results_xgb
-        except Exception as e:
-            st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
-            return None, None, None
-    
-    results_logistic, results_rf, results_xgb = load_results()
     
     if results_logistic and results_rf and results_xgb:
         # 성능 지표 표
@@ -344,7 +360,7 @@ with tab2:
             **핵심 발견**
             
             1. **Random Forest 최고 성능**
-               - Recall: 57.14% (목표에 가장 근접)
+               - Recall: {rf_recall_pct:.2f}% (목표에 가장 근접)
                - 21개 품질 이상 중 12개 탐지 성공
             
             2. **시간 Feature의 중요성**
@@ -361,7 +377,7 @@ with tab2:
             **한계점**
             
             1. **아직 부족한 Recall**
-               - 현재 57.14% (목표 60%)
+               - 현재 {rf_recall_pct:.2f}% (목표 60%)
                - 9개 품질 이상품 여전히 놓침
             
             2. **낮은 Precision**

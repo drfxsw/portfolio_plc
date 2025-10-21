@@ -47,6 +47,21 @@ plt.rcParams['axes.unicode_minus'] = False
 # 경로 설정 (app 기준으로)
 model_path = "../project_failure/models/"
 
+# 성능 결과 로드
+@st.cache_data
+def load_failure_results():
+    try:
+        results_lstm = joblib.load(os.path.join(model_path, 'results_lstm.pkl'))
+        results_gru = joblib.load(os.path.join(model_path, 'results_gru.pkl')) 
+        results_cnn = joblib.load(os.path.join(model_path, 'results_cnn.pkl'))
+        return results_lstm, results_gru, results_cnn
+    except Exception as e:
+        st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
+        return None, None, None
+
+# 결과 로드
+results_lstm, results_gru, results_cnn = load_failure_results()
+
 # 메인 타이틀
 st.title("설비 이상 감지 시스템")
 # 탭 생성
@@ -68,7 +83,18 @@ with tab1:
         """)
         
         st.subheader("주요 성과")
-        st.markdown("""
+        # 동적 성능 지표 사용
+        if results_gru:
+            gru_accuracy = results_gru.get('accuracy', 0.9817) * 100
+            gru_recall = results_gru.get('recall', 0.9026) * 100
+            st.markdown(f"""
+        - **최고 성능**: GRU 모델 ({gru_accuracy:.2f}% 정확도)
+        - **Recall**: {gru_recall:.2f}% (대부분 설비 이상 사전 탐지)
+        - **조기 경고**: 설비 이상 전 미리 감지 가능
+        - **실시간 예측**: 연속 센서 데이터 처리
+        """)
+        else:
+            st.markdown("""
         - **최고 성능**: GRU 모델 (98.17% 정확도)
         - **Recall**: 90.26% (대부분 설비 이상 사전 탐지)
         - **조기 경고**: 설비 이상 전 미리 감지 가능
@@ -130,54 +156,40 @@ with tab1:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown("""
+        # 동적 성능 지표 사용
+        lstm_accuracy = results_lstm.get('accuracy', 0.9689) * 100 if results_lstm else 96.89
+        st.markdown(f"""
         **LSTM (Long Short-Term Memory)**
         - 순환 신경망의 변형
         - 장기 의존성 학습
         - 게이트 메커니즘 활용
-        - 정확도: 96.89%
+        - 정확도: {lstm_accuracy:.2f}%
         """)
     
     with col2:
-        st.markdown("""
+        # 동적 성능 지표 사용 (이미 위에서 정의됨)
+        st.markdown(f"""
         **GRU (Gated Recurrent Unit)** (최종 선택)
         - LSTM의 간소화 버전
         - 빠른 학습 속도
         - 적은 파라미터 수
-        - 정확도: 98.17%
+        - 정확도: {gru_accuracy:.2f}%
         """)
     
     with col3:
-        st.markdown("""
+        # 동적 성능 지표 사용
+        cnn_accuracy = results_cnn.get('accuracy', 0.9553) * 100 if results_cnn else 95.53
+        st.markdown(f"""
         **CNN (Convolutional Neural Network)**
         - 1D 컨볼루션 레이어
         - 시계열 지역 패턴 탐지
         - 8개 센서 특성 처리
-        - 정확도: 95.53%
+        - 정확도: {cnn_accuracy:.2f}%
         """)
 
 # ========================= TAB 2: 성능 분석 =========================
 with tab2:
     st.header("성능 분석")
-    
-    # 성능 결과 로드
-    @st.cache_data
-    def load_failure_results():
-        try:
-            # defect와 동일한 경로 설정
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.join(current_dir, "..", "..")
-            model_path = os.path.join(project_root, "project_failure", "models")
-            
-            results_lstm = joblib.load(os.path.join(model_path, 'results_lstm.pkl'))
-            results_gru = joblib.load(os.path.join(model_path, 'results_gru.pkl')) 
-            results_cnn = joblib.load(os.path.join(model_path, 'results_cnn.pkl'))
-            return results_lstm, results_gru, results_cnn
-        except Exception as e:
-            st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
-            return None, None, None
-    
-    results_lstm, results_gru, results_cnn = load_failure_results()
     
     if results_lstm and results_gru and results_cnn:
         # 성능 지표 표
@@ -292,9 +304,9 @@ with tab2:
             **핵심 발견**
             
             1. **GRU 모델 최고 성능**
-               - 정확도: 98.17% (3개 모델 중 최고)
-               - 정밀도: 97.78% (거짓 경보 최소화)
-               - 재현율: 90.26% (대부분 설비 이상 사전 탐지)
+               - 정확도: {gru_accuracy:.2f}% (3개 모델 중 최고)
+               - 정밀도: {results_gru.get('precision', 0.9778) * 100:.2f}% (거짓 경보 최소화)
+               - 재현율: {gru_recall:.2f}% (대부분 설비 이상 사전 탐지)
             
             2. **효율적 학습**
                - 23% 적은 파라미터로 우수한 성능
@@ -312,14 +324,14 @@ with tab2:
             **성능 비교**
             
             1. **정확도 순위**
-               - GRU: 98.17% (1위)
-               - LSTM: 96.89% (2위)
-               - CNN: 95.53% (3위)
+               - GRU: {gru_accuracy:.2f}% (1위)
+               - LSTM: {lstm_accuracy:.2f}% (2위)
+               - CNN: {cnn_accuracy:.2f}% (3위)
             
             2. **정밀도 순위**
-               - GRU: 97.78% (1위)
-               - LSTM: 88.61% (2위)
-               - CNN: 80.89% (3위)
+               - GRU: {results_gru.get('precision', 0.9778) * 100:.2f}% (1위)
+               - LSTM: {results_lstm.get('precision', 0.8861) * 100:.2f}% (2위)
+               - CNN: {results_cnn.get('precision', 0.8089) * 100:.2f}% (3위)
             
             3. **False Alarm 비교**
                - GRU: 4개 (최소)
