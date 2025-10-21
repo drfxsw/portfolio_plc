@@ -698,7 +698,69 @@ with tab3:
             
             # 범례용 invisible traces 추가 (첫 번째 서브플롯에만)
             if True:  # 항상 실행
-                # 설비 이상 발생일 범례
+                # 설비 상태별 범례
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='markers',
+                        name='주의 알람 발생',
+                        marker=dict(color='orange', size=8),
+                        showlegend=True,
+                        legendgroup='caution'
+                    ),
+                    row=1, col=1
+                )
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='markers',
+                        name='경고 알람 발생',
+                        marker=dict(color='darkorange', size=8),
+                        showlegend=True,
+                        legendgroup='warning'
+                    ),
+                    row=1, col=1
+                )
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='markers',
+                        name='위험 알람 발생',
+                        marker=dict(color='red', size=8),
+                        showlegend=True,
+                        legendgroup='danger'
+                    ),
+                    row=1, col=1
+                )
+                
+                # 실제 값과 예측 값 구분 범례
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='lines',
+                        name='실제 값',
+                        line=dict(color='black', width=2),
+                        showlegend=True,
+                        legendgroup='actual_line'
+                    ),
+                    row=1, col=1
+                )
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None], y=[None],
+                        mode='lines',
+                        name='모델 예측',
+                        line=dict(color='blue', width=2),
+                        showlegend=True,
+                        legendgroup='prediction_line'
+                    ),
+                    row=1, col=1
+                )
+                
+                # 설비 이상 발생일 범례 (선으로 표시)
                 fig.add_trace(
                     go.Scatter(
                         x=[None], y=[None],
@@ -707,20 +769,6 @@ with tab3:
                         line=dict(color='red', dash='dash', width=2),
                         showlegend=True,
                         legendgroup='failure_day'
-                    ),
-                    row=1, col=1
-                )
-                
-                # 설비 이상 징후 구간 범례
-                fig.add_trace(
-                    go.Scatter(
-                        x=[None], y=[None],
-                        mode='lines',
-                        name='설비 이상 징후 구간',
-                        line=dict(color='pink', width=10),
-                        opacity=0.3,
-                        showlegend=True,
-                        legendgroup='failure_warning'
                     ),
                     row=1, col=1
                 )
@@ -759,23 +807,23 @@ with tab3:
                 valid_days = [d for d in days if d <= data['failure_day']]
                 valid_actual = [daily_actual[j] for j in range(len(days)) if days[j] <= data['failure_day']]
                 
-                # 실제 라벨 추가
+                # 실제값 추가 (범례 제거)
                 fig.add_trace(
                     go.Scatter(
-                        x=valid_days,
-                        y=valid_actual,
+                        x=days,
+                        y=daily_actual,
                         mode='lines+markers',
                         name='실제 라벨',
-                        line=dict(color='black', dash='dash', width=2),
+                        line=dict(color='black', width=2),
                         marker=dict(symbol='circle', size=6),
                         hovertemplate='<b>실제 라벨</b><br>일: %{x}<br>설비 이상 비율: %{y:.2%}<extra></extra>',
-                        showlegend=(i == 0),
+                        showlegend=False,  # 실제 라벨 범례도 제거
                         legendgroup='actual'
                     ),
                     row=row, col=1
                 )
                 
-                # 예측값 추가
+                # 예측값 추가 (모델명 범례 제거)
                 fig.add_trace(
                     go.Scatter(
                         x=days,
@@ -785,7 +833,7 @@ with tab3:
                         line=dict(color='blue', width=2),
                         marker=dict(symbol='square', size=6),
                         hovertemplate=f'<b>{model_name} 예측</b><br>일: %{{x}}<br>설비 이상 비율: %{{y:.2%}}<extra></extra>',
-                        showlegend=True,
+                        showlegend=False,  # 모델별 범례 제거
                         legendgroup=f'pred_{model_name.lower()}'
                     ),
                     row=row, col=1

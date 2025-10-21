@@ -6,64 +6,55 @@ def load_common_styles():
     """모든 페이지에 적용할 공통 CSS 스타일 - Bright Industrial Design"""
     st.markdown("""
     <style>
-        /* 전체 배경 - Bright Industrial */
-        .stApp {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            color: #1a202c;
+        /* CSS 변수 정의 - config.toml 값과 연동 */
+        :root {
+            --primary-color: #4299e1;
+            --bg-color: #ffffff;  
+            --secondary-bg: #f7fafc;
+            --text-color: #1a202c;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.08);
         }
         
+        /* 커스텀 레이아웃 */
         .main > div {
             padding: 1.5rem;
             background: transparent;
         }
         
-        /* 기본 텍스트 색상 */
-        .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 {
-            color: #1a202c !important;
-        }
-        
-        /* 사이드바 - Clean Bright */
+        /* 사이드바 커스텀 스타일 - config.toml의 기본 색상 사용 */
         .css-1d391kg, .css-1lcbmhc, .css-17lntkn, .stSidebar, [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%) !important;
             border-right: 1px solid #e2e8f0;
         }
         
-        /* 사이드바 텍스트 */
-        .stSidebar .stMarkdown, .stSidebar .stText, .stSidebar p, .stSidebar h1, .stSidebar h2, .stSidebar h3,
-        [data-testid="stSidebar"] .stMarkdown, [data-testid="stSidebar"] .stText, [data-testid="stSidebar"] p,
-        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
-        [data-testid="stSidebar"] label, .stSidebar label {
-            color: #2d3748 !important;
-        }
-        
-        /* 사이드바 네비게이션 */
+        /* 사이드바 네비게이션 - config.toml primaryColor 기반 */
         .css-1544g2n, [data-testid="stSidebarNav"] {
-            background: rgba(102, 126, 234, 0.08) !important;
-            color: #2d3748 !important;
+            background: rgba(66, 153, 225, 0.08) !important;
+            color: var(--text-color) !important;
             border-radius: 8px;
             margin: 4px 0;
-            border: 1px solid rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(66, 153, 225, 0.1);
         }
         
         .css-1544g2n:hover, [data-testid="stSidebarNav"]:hover {
-            background: rgba(102, 126, 234, 0.15) !important;
+            background: rgba(66, 153, 225, 0.15) !important;
         }
         
         /* Home 페이지 헤더 */
         .home-header {
-            background: white;
+            background: var(--bg-color);
             padding: 3rem 2rem;
             border-radius: 20px;
             margin-bottom: 3rem;
             text-align: center;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px var(--shadow-color);
         }
         
         .home-title {
             font-size: 3.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3182ce 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -79,19 +70,19 @@ def load_common_styles():
         
         /* 페이지 헤더 */
         .page-header {
-            background: white;
+            background: var(--bg-color);
             padding: 2.5rem 2rem;
             border-radius: 20px;
             margin-bottom: 3rem;
             text-align: center;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 25px var(--shadow-color);
         }
         
         .page-title {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3182ce 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -107,11 +98,11 @@ def load_common_styles():
         
         /* 산업용 프로젝트 카드 */
         .industrial-card {
-            background: white;
+            background: var(--bg-color);
             padding: 2.5rem;
             border-radius: 20px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 25px var(--shadow-color);
             transition: all 0.3s ease;
             margin-bottom: 2rem;
             position: relative;
@@ -125,7 +116,7 @@ def load_common_styles():
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #4299e1 0%, #4fd1c7 100%);
+            background: linear-gradient(90deg, var(--primary-color) 0%, #4fd1c7 100%);
         }
         
         .industrial-card:hover {
@@ -134,7 +125,7 @@ def load_common_styles():
         }
         
         .card-ml::before {
-            background: linear-gradient(90deg, #4299e1 0%, #63b3ed 100%);
+            background: linear-gradient(90deg, var(--primary-color) 0%, #63b3ed 100%);
         }
         
         .card-dl::before {
@@ -144,7 +135,7 @@ def load_common_styles():
         .card-header {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #1a202c;
+            color: var(--text-color);
             margin-bottom: 0.8rem;
         }
         
@@ -187,7 +178,7 @@ def load_common_styles():
         }
         
         .card-ml .performance-badge {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3182ce 100%);
             box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
         }
         
@@ -218,7 +209,7 @@ def load_common_styles():
         
         .card-ml .tech-badge:hover {
             background: rgba(66, 153, 225, 0.2);
-            border-color: #4299e1;
+            border-color: var(--primary-color);
         }
         
         .card-dl .tech-badge {
@@ -234,11 +225,11 @@ def load_common_styles():
         
         /* 섹션 컨테이너 */
         .section-container {
-            background: white;
+            background: var(--bg-color);
             padding: 2rem;
             border-radius: 15px;
             margin-bottom: 2rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
         }
         
@@ -260,11 +251,11 @@ def load_common_styles():
         }
         
         .metric-card {
-            background: white;
+            background: var(--bg-color);
             padding: 1.5rem;
             border-radius: 15px;
             text-align: center;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             transition: all 0.3s ease;
         }
@@ -277,7 +268,7 @@ def load_common_styles():
         .metric-value {
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3182ce 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -291,18 +282,18 @@ def load_common_styles():
         
         /* 차트 컨테이너 */
         .chart-container {
-            background: white;
+            background: var(--bg-color);
             padding: 1.5rem;
             border-radius: 15px;
             margin: 1rem 0;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
         }
         
         /* Streamlit 요소 커스터마이징 */
         .stButton > button {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3182ce 100%);
+            color: var(--bg-color);
             border: none;
             border-radius: 10px;
             padding: 0.6rem 2rem;
@@ -318,31 +309,31 @@ def load_common_styles():
         }
         
         .stSelectbox > div > div {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
             border-radius: 10px;
         }
         
         .stTextInput > div > div > input {
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
             border-radius: 10px;
         }
         
         /* 탭 스타일 */
         .stTabs [data-baseweb="tab-list"] {
             gap: 4px;
-            background: #f7fafc;
+            background: var(--secondary-bg);
             border-radius: 12px;
             padding: 0.5rem;
         }
         
         .stTabs [data-baseweb="tab"] {
-            background: white;
+            background: var(--bg-color);
             color: #4a5568;
             border-radius: 8px;
             padding: 0.6rem 1.2rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             font-weight: 500;
         }
         
@@ -351,17 +342,17 @@ def load_common_styles():
         }
         
         .stTabs [data-baseweb="tab"][aria-selected="true"] {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3182ce 100%);
+            color: var(--bg-color);
             border-color: transparent;
         }
         
         /* 메트릭 위젯 */
         .stMetric {
-            background: white;
+            background: var(--bg-color);
             padding: 1rem;
             border-radius: 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
         
@@ -543,9 +534,9 @@ def create_section_container(title, content):
     </div>
     """, unsafe_allow_html=True)
 
-# 색상 상수 - Cool Tone Palette
+# 색상 상수 - config.toml과 연동된 Cool Tone Palette
 COLORS = {
-    'primary': '#4299e1',    # 밝은 파랑
+    'primary': '#4299e1',    # config.toml primaryColor와 동일
     'secondary': '#3182ce',  # 진한 파랑
     'ml': '#63b3ed',         # 하늘색
     'dl': '#4fd1c7',         # 청록색
@@ -554,4 +545,5 @@ COLORS = {
     'error': '#9f7aea'       # 보라색
 }
 
+# config.toml primaryColor 기반 차트 색상
 CHART_COLORS = ['#4299e1', '#3182ce', '#63b3ed', '#4fd1c7', '#68d391', '#81e6d9']
