@@ -8,9 +8,9 @@
 |------|------|------|
 | 01_data_exploration | 데이터 탐색 | 불균형, 약한 상관관계 발견 |
 | 02_data_preprocessing | 전처리 + 시간 Feature | 594개 특성 |
-| 03_logistic | 베이스라인 | Recall 19.05% |
-| 04_random_forest | 비선형 모델 | Recall 57.14% |
-| 05_xgboost | 비교 실험 | Recall 38.10% |
+| 03_logistic | 베이스라인 | Recall 19.05%|
+| 04_random_forest | 비선형 모델 | Recall 57.14%|
+| 05_xgboost | 비교 실험 | Recall 38.10%|
 | 06_comparison | 최종 선택 | Random Forest |
 
 ## 프로젝트 개요

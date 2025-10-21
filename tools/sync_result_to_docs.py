@@ -84,35 +84,70 @@ def update_readme(readme_path: Path, models_order, results):
     shutil.copy2(readme_path, bak)
     txt = readme_path.read_text(encoding="utf-8")
 
-    # 찾아넣기: '## 주요 성과' 뒤에 첫 번째 헤더(## ... ) 전까지 영역을 대체(없으면 파일 끝까지)
+    # 1. 프로젝트 요약 테이블의 결과 열 업데이트
+    def update_project_summary():
+        nonlocal txt
+        def safe_replace(pattern, value, text):
+            """정규표현식 그룹 참조 오류를 방지하는 안전한 치환 함수"""
+            import re
+            def replacer(match):
+                return match.group(1) + value + match.group(2)
+            return re.sub(pattern, replacer, text)
+        
+        for model_name, result in results.items():
+            if "Random Forest" in model_name or "rf" in model_name.lower():
+                recall_val = pct(result.get('recall') or result.get('test_recall'))
+                pattern = r'(\| 04_random_forest.*?\| Recall )[^|]+(\|)'
+                txt = safe_replace(pattern, recall_val, txt)
+            elif "XGBoost" in model_name or "xgb" in model_name.lower():
+                recall_val = pct(result.get('recall') or result.get('test_recall'))
+                pattern = r'(\| 05_xgboost.*?\| Recall )[^|]+(\|)'
+                txt = safe_replace(pattern, recall_val, txt)
+            elif "Logistic" in model_name or "logistic" in model_name.lower():
+                recall_val = pct(result.get('recall') or result.get('test_recall'))
+                pattern = r'(\| 03_logistic.*?\| Recall )[^|]+(\|)'
+                txt = safe_replace(pattern, recall_val, txt)
+
+    # 2. 주요 성과 테이블만 업데이트 (핵심 성과는 보존)
     m_start = re.search(r"^##\s+주요 성과\s*$", txt, flags=re.MULTILINE)
     if not m_start:
         print("  README: '## 주요 성과' section not found, skipping")
         return
+    
     start_idx = m_start.end()
-    # find next top-level header '## ' after start_idx
-    m_next = re.search(r"^##\s+", txt[start_idx:], flags=re.MULTILINE)
-    end_idx = start_idx + m_next.start() if m_next else len(txt)
+    
+    # 기존 테이블만 찾아서 교체 (핵심 성과나 다른 내용은 보존)
+    table_pattern = r"\n\n\|[^#]*?(?=\n\n###|\n##|\Z)"
+    m_table = re.search(table_pattern, txt[start_idx:], flags=re.DOTALL)
+    
+    if m_table:
+        table_start = start_idx + m_table.start()
+        table_end = start_idx + m_table.end()
+        
+        # build new table
+        header = "| 지표 | " + " | ".join(models_order) + " |\n"
+        header += "|------" + "|------" * len(models_order) + "|\n"
+        rows = []
+        for metric_key, label in [("accuracy","Accuracy"), ("precision","Precision"), ("recall","Recall")]:
+            row = f"| **{label}** "
+            for mn in models_order:
+                r = results.get(mn, {})
+                val = r.get(metric_key) or r.get(f'test_{metric_key}') if isinstance(r, dict) else None
+                if val is None:
+                    val = r.get(label) or r.get(label.lower()) if isinstance(r, dict) else None
+                row += "| " + (pct(val) if val is not None else "N/A") + " "
+            row += "|\n"
+            rows.append(row)
+        new_table = "\n\n" + header + "".join(rows)
+        
+        txt = txt[:table_start] + new_table + txt[table_end:]
+    else:
+        print("  README: Performance table not found, skipping table update")
 
-    # build table
-    header = "| 지표 | " + " | ".join(models_order) + " |\n"
-    header += "|------" + "|------" * len(models_order) + "|\n"
-    rows = []
-    for metric_key, label in [("accuracy","Accuracy"), ("precision","Precision"), ("recall","Recall")]:
-        row = f"| **{label}** "
-        for mn in models_order:
-            r = results.get(mn, {})
-            # support different key casings
-            val = r.get(metric_key) if isinstance(r, dict) else None
-            if val is None:
-                val = r.get(label) or r.get(label.lower()) if isinstance(r, dict) else None
-            row += "| " + (pct(val) if val is not None else "N/A") + " "
-        row += "|\n"
-        rows.append(row)
-    table = header + "".join(rows)
-
-    new_txt = txt[:start_idx] + "\n\n" + table + "\n" + txt[end_idx:]
-    readme_path.write_text(new_txt, encoding="utf-8")
+    # 프로젝트 요약도 업데이트
+    update_project_summary()
+    
+    readme_path.write_text(txt, encoding="utf-8")
     print("  README updated:", readme_path)
 
 def update_notebook_conclusion(nb_path: Path, results, models_order):
@@ -122,40 +157,67 @@ def update_notebook_conclusion(nb_path: Path, results, models_order):
     bak = nb_path.with_suffix(".ipynb.bak")
     shutil.copy2(nb_path, bak)
     nb = nbformat.read(nb_path, as_version=4)
-    replaced = False
+    updated = False
+    
     for cell in nb.cells:
-        if cell.cell_type == "markdown" and cell.source.strip().startswith("# 최종 결론"):
-            # build inserted summary block
-            # pick representative model by prefer order
-            rep = None
-            for mn in models_order:
-                if mn in results:
-                    rep = results[mn]; break
-            if rep is None and results:
-                rep = next(iter(results.values()))
-            summary_lines = []
-            summary_lines.append("\n\n---\n")
-            summary_lines.append("### 자동 갱신 - 성능 요약\n\n")
-            if rep is None:
-                summary_lines.append("- 결과 파일이 없습니다.\n")
-            else:
-                name = rep.get("model") or rep.get("model_name") or "선택 모델"
-                summary_lines.append(f"- 선택된 모델: **{name}**\n")
-                summary_lines.append(f"- Accuracy: {pct(rep.get('accuracy'))}\n")
-                summary_lines.append(f"- Precision: {pct(rep.get('precision'))}\n")
-                summary_lines.append(f"- Recall: {pct(rep.get('recall'))}\n")
-                notes = rep.get("notes") or rep.get("note") or ""
-                if notes:
-                    summary_lines.append(f"- 메모: {notes}\n")
-            # append summary to existing cell (do not delete existing content)
-            cell.source = cell.source.rstrip() + "".join(summary_lines)
-            replaced = True
-            break
-    if replaced:
+        if cell.cell_type == "markdown":
+            original_content = cell.source
+            updated_content = original_content
+            
+            # 각 모델의 성능 지표를 실제 값으로 업데이트
+            for model_name, result in results.items():
+                if isinstance(result, dict):
+                    accuracy = result.get('accuracy') or result.get('test_accuracy')
+                    precision = result.get('precision') or result.get('test_precision') 
+                    recall = result.get('recall') or result.get('test_recall')
+                    
+                    def safe_replace_nb(pattern, value, text):
+                        """노트북용 안전한 치환 함수"""
+                        def replacer(match):
+                            return match.group(1) + value
+                        return re.sub(pattern, replacer, text, flags=re.IGNORECASE)
+                    
+                    if accuracy:
+                        # 다양한 패턴으로 정확도 업데이트
+                        patterns = [
+                            rf"({model_name}.*?정확도[:\s]*)[0-9]+\.[0-9]+%",
+                            rf"({model_name}.*?Accuracy[:\s]*)[0-9]+\.[0-9]+%",
+                            rf"(Test Accuracy[:\s]*)[0-9]+\.[0-9]+%"
+                        ]
+                        acc_val = pct(accuracy)
+                        for pattern in patterns:
+                            updated_content = safe_replace_nb(pattern, acc_val, updated_content)
+                    
+                    if precision:
+                        patterns = [
+                            rf"({model_name}.*?정밀도[:\s]*)[0-9]+\.[0-9]+%",
+                            rf"({model_name}.*?Precision[:\s]*)[0-9]+\.[0-9]+%",
+                            rf"(Test Precision[:\s]*)[0-9]+\.[0-9]+%"
+                        ]
+                        prec_val = pct(precision)
+                        for pattern in patterns:
+                            updated_content = safe_replace_nb(pattern, prec_val, updated_content)
+                    
+                    if recall:
+                        patterns = [
+                            rf"({model_name}.*?재현율[:\s]*)[0-9]+\.[0-9]+%",
+                            rf"({model_name}.*?Recall[:\s]*)[0-9]+\.[0-9]+%", 
+                            rf"(Test Recall[:\s]*)[0-9]+\.[0-9]+%"
+                        ]
+                        recall_val = pct(recall)
+                        for pattern in patterns:
+                            updated_content = safe_replace_nb(pattern, recall_val, updated_content)
+            
+            # 내용이 변경되었으면 업데이트
+            if updated_content != original_content:
+                cell.source = updated_content
+                updated = True
+    
+    if updated:
         nbformat.write(nb, nb_path)
-        print("  Notebook conclusion updated:", nb_path)
+        print("  Notebook metrics updated:", nb_path)
     else:
-        print("  No '# 최종 결론' markdown cell found in", nb_path)
+        print("  No metrics found to update in", nb_path)
 
 def main():
     for proj, cfg in PROJECTS.items():
