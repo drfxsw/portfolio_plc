@@ -525,7 +525,7 @@ with tab3:
                     'measurements_per_day': measurements_per_day
                 }
                 
-                st.info(f"{failure_day}일에 설비 이상 발생 (장비 정지), {failure_warning_start_day}일부터 '위험' 알람 시작")
+                st.info(f"{failure_day}일에 설비 이상 발생. 위험({failure_warning_start_day}일~), 경고({failure_warning_start_day-3}일~), 주의({failure_warning_start_day-4}일~)")
             else:
                 st.error("시퀀스 생성 실패")
         
@@ -922,8 +922,9 @@ with tab3:
             
             st.info(
                    f"일별 288개 측정 중 설비 이상 신호 비율로 평균을 계산했습니다. "
-                   f"배경색: 주의(노랑), 경고(주황), 위험(빨강). "
-                   f"설비 이상 징후는 {data['failure_warning_start_day']}일부터 {data['failure_day']}일까지 발생합니다."
+                   f"위험: {data['failure_warning_start_day']}일부터 (5일전), "
+                   f"경고: {data['failure_warning_start_day']-3}일부터 (3일전), "
+                   f"주의: {data['failure_warning_start_day']-4}일부터 (1일전)"
             )
 
             st.markdown("---")
