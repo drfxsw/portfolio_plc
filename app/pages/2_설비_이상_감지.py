@@ -45,7 +45,11 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 경로 설정 (app 기준으로)
-model_path = "../../project_failure/models/"
+# 경로 설정 (상대 경로)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.join(current_dir, "..", "..")
+model_path = os.path.join(project_root, "project_failure", "models")
+data_path = os.path.join(project_root, "project_failure", "processed_data")
 
 # 성능 결과 로드
 @st.cache_data
