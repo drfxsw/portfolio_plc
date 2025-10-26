@@ -27,6 +27,9 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.styles import load_common_styles, create_page_header, create_metric_cards, COLORS, CHART_COLORS
 
+import glob
+st.write("모델 폴더 내 파일 목록:", glob.glob(os.path.join(model_path, "*")))
+
 # 페이지 설정
 st.set_page_config(
     page_title="설비 이상 감지 시스템",
@@ -60,7 +63,7 @@ def load_failure_results():
         results_cnn = joblib.load(os.path.join(model_path, 'results_cnn.pkl'))
         return results_lstm, results_gru, results_cnn
     except Exception as e:
-        st.error(f"성능 결과 파일을 불러올 수 없습니다: {e}")
+        st.error(f"성능 결과 파일을 불러올 수 없습니다: ㅇㅇㅇ{e}")
         return None, None, None
 
 # 결과 로드
