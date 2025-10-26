@@ -310,7 +310,7 @@ with tab2:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("""
+            st.markdown(f"""
             **핵심 발견**
             
             1. **GRU 모델 최고 성능**
@@ -330,7 +330,7 @@ with tab2:
             """)
         
         with col2:
-            st.markdown("""
+            st.markdown(f"""
             **성능 비교**
             
             1. **정확도 순위**

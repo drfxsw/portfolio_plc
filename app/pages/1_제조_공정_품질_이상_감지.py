@@ -311,7 +311,7 @@ with tab2:
             # 서브플롯 생성
             fig = make_subplots(
                 rows=1, cols=3,
-                subplot_titles=[f'{name} Confusion Matrix' for name in model_names],
+                subplot_titles=[f'{name}' for name in model_names],
                 horizontal_spacing=0.1
             )
             
@@ -356,7 +356,7 @@ with tab2:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("""
+            st.markdown(f"""
             **핵심 발견**
             
             1. **Random Forest 최고 성능**
@@ -373,7 +373,7 @@ with tab2:
             """)
         
         with col2:
-            st.markdown("""
+            st.markdown(f"""
             **한계점**
             
             1. **아직 부족한 Recall**
