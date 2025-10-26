@@ -52,8 +52,8 @@ model_path = os.path.join(project_root, "project_failure", "models")
 data_path = os.path.join(project_root, "project_failure", "processed_data")
 
 
-import glob
-st.write("모델 폴더 내 파일 목록:", glob.glob(os.path.join(model_path, "*")))
+# import glob
+# st.write("모델 폴더 내 파일 목록:", glob.glob(os.path.join(model_path, "*")))
 
 # 성능 결과 로드
 @st.cache_data
