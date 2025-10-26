@@ -45,7 +45,7 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 경로 설정 (app 기준으로)
-model_path = "../project_failure/models/"
+model_path = "../../project_failure/models/"
 
 # 성능 결과 로드
 @st.cache_data
@@ -84,6 +84,7 @@ with tab1:
         
         st.subheader("주요 성과")
         # 동적 성능 지표 사용
+
         if results_gru:
             gru_accuracy = results_gru.get('accuracy', 0.9817) * 100
             gru_recall = results_gru.get('recall', 0.9026) * 100
@@ -167,7 +168,8 @@ with tab1:
         """)
     
     with col2:
-        # 동적 성능 지표 사용 (이미 위에서 정의됨)
+        # 동적 성능 지표 사용
+        gru_accuracy = results_gru.get('accuracy', 0.9817) * 100 if results_gru else 98.17
         st.markdown(f"""
         **GRU (Gated Recurrent Unit)** (최종 선택)
         - LSTM의 간소화 버전
