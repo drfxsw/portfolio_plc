@@ -27,9 +27,6 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils.styles import load_common_styles, create_page_header, create_metric_cards, COLORS, CHART_COLORS
 
-import glob
-st.write("모델 폴더 내 파일 목록:", glob.glob(os.path.join(model_path, "*")))
-
 # 페이지 설정
 st.set_page_config(
     page_title="설비 이상 감지 시스템",
@@ -53,6 +50,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, "..", "..")
 model_path = os.path.join(project_root, "project_failure", "models")
 data_path = os.path.join(project_root, "project_failure", "processed_data")
+
+
+import glob
+st.write("모델 폴더 내 파일 목록:", glob.glob(os.path.join(model_path, "*")))
 
 # 성능 결과 로드
 @st.cache_data
