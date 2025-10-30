@@ -40,6 +40,20 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, "..", "..")
 results_path = os.path.join(project_root, "project_vision", "researching", "results")
 
+print("results 폴더 존재:", os.path.exists(results_path))
+print("\n하위 폴더:")
+if os.path.exists(results_path):
+    for item in os.listdir(results_path):
+        print(f"  - {item}")
+        
+        # yolov8s_pcb 확인
+        s_path = os.path.join(results_path, "yolov8s_pcb", "results.csv")
+        print(f"    yolov8s CSV 존재: {os.path.exists(s_path)}")
+        
+        # yolov8m_pcb 확인
+        m_path = os.path.join(results_path, "yolov8m_pcb", "results.csv")
+        print(f"    yolov8m CSV 존재: {os.path.exists(m_path)}")
+        
 # 성능 결과 로드
 @st.cache_data
 def load_vision_results():
