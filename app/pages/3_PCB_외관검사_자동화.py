@@ -36,7 +36,9 @@ plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
 # 경로 설정
-results_path = "../project_vision/researching/results/"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.join(current_dir, "..", "..")
+results_path = os.path.join(project_root, "project_vision", "researching", "results")
 
 # 성능 결과 로드
 @st.cache_data
