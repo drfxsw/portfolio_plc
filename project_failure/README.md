@@ -95,4 +95,3 @@ project_failure/
 1. 데이터 준비
 원본데이터를 project_failure/data 이하에 저장 (1st_test/[데이터])
 2. 순서대로 실행
-// ...existing code...
