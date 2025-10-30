@@ -12,6 +12,7 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import os
 import sys
+from pathlib import Path
 
 # 스타일 유틸리티 import
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -445,21 +446,260 @@ with tab2:
 # ========================= TAB 3: 실시간 검출 데모 =========================
 with tab3:
     st.header("실시간 검출 데모")
-    st.info("준비 중: Streamlit 기반 실시간 PCB 결함 검출 시스템이 곧 추가됩니다.")
+    st.markdown("샘플 PCB 이미지로 YOLOv8 모델의 결함 검출을 시뮬레이션합니다.")
     
-    st.markdown("""
-    ### 계획된 기능
+    st.subheader("PCB 결함 검출 시뮬레이션")
     
-    1. **이미지 업로드**
-       - 사용자 PCB 이미지 업로드
-       - 실시간 결함 검출
+    # 세션 상태 초기화
+    if 'current_image_path' not in st.session_state:
+        st.session_state.current_image_path = None
+    if 'current_class' not in st.session_state:
+        st.session_state.current_class = None
+    if 'detection_done' not in st.session_state:
+        st.session_state.detection_done = False
     
-    2. **결과 시각화**
-       - Bounding Box 표시
-       - 결함 유형 및 신뢰도 표시
+    # 샘플 이미지 로드
+    import random
+    from PIL import Image, ImageDraw, ImageFont
     
-    3. **통계 분석**
-       - 검출된 결함 수
-       - 결함 유형별 분포
-       - 품질 리포트 생성
-    """)
+    @st.cache_data
+    def get_sample_images():
+        samples_dir = Path(os.path.join(os.path.dirname(__file__), '..', 'assets', 'pcb_samples'))
+        classes = ['Missing_hole', 'Mouse_bite', 'Open_circuit', 'Short', 'Spur', 'Spurious_copper']
+        
+        samples = {}
+        for cls in classes:
+            class_dir = samples_dir / cls
+            if class_dir.exists():
+                samples[cls] = list(class_dir.glob('*.jpg'))
+        
+        return samples
+    
+    sample_images = get_sample_images()
+    
+    # 모델 성능 데이터 (실제 학습 결과 기반)
+    model_performance = {
+        'YOLOv8s': {
+            'Missing_hole': {'precision': 0.958, 'recall': 0.971},
+            'Mouse_bite': {'precision': 0.929, 'recall': 0.722},
+            'Open_circuit': {'precision': 0.903, 'recall': 0.654},
+            'Short': {'precision': 0.929, 'recall': 0.962},
+            'Spur': {'precision': 0.778, 'recall': 0.714},
+            'Spurious_copper': {'precision': 0.820, 'recall': 0.739}
+        },
+        'YOLOv8m': {
+            'Missing_hole': {'precision': 0.962, 'recall': 0.990},
+            'Mouse_bite': {'precision': 0.954, 'recall': 0.778},
+            'Open_circuit': {'precision': 0.962, 'recall': 0.731},
+            'Short': {'precision': 0.934, 'recall': 0.962},
+            'Spur': {'precision': 0.909, 'recall': 0.714},
+            'Spurious_copper': {'precision': 0.901, 'recall': 0.783}
+        }
+    }
+    
+    # 검출 시뮬레이션 함수
+    def simulate_detection(img, true_class, model_name):
+        """실제 모델 성능 기반 검출 시뮬레이션"""
+        perf = model_performance[model_name][true_class]
+        
+        # Recall 기반으로 검출 성공 여부 결정
+        detected = random.random() < perf['recall']
+        
+        if detected:
+            # 정답 검출
+            detected_class = true_class
+            # Precision 기반 신뢰도 (약간의 랜덤성 추가)
+            confidence = perf['precision'] * random.uniform(0.85, 1.0)
+        else:
+            # 검출 실패 또는 오검출
+            if random.random() < 0.5:
+                # 다른 클래스로 오검출
+                other_classes = [c for c in model_performance[model_name].keys() if c != true_class]
+                detected_class = random.choice(other_classes)
+                confidence = random.uniform(0.4, 0.7)
+            else:
+                # 검출 실패
+                detected_class = None
+                confidence = 0
+        
+        # Bounding Box 시뮬레이션
+        img_with_box = img.copy()
+        draw = ImageDraw.Draw(img_with_box)
+        
+        if detected_class:
+            # 이미지 중앙 부근에 랜덤 박스
+            w, h = img.size
+            x1 = random.randint(int(w*0.2), int(w*0.4))
+            y1 = random.randint(int(h*0.2), int(h*0.4))
+            x2 = random.randint(int(w*0.6), int(w*0.8))
+            y2 = random.randint(int(h*0.6), int(h*0.8))
+            
+            # 박스 그리기
+            color = 'green' if detected_class == true_class else 'red'
+            draw.rectangle([x1, y1, x2, y2], outline=color, width=3)
+            
+            # 라벨
+            label = f"{detected_class} {confidence:.2f}"
+            draw.text((x1, y1-15), label, fill=color)
+        
+        return detected_class, confidence, img_with_box
+    
+    # 랜덤 이미지 선택 버튼
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown("**샘플 이미지를 랜덤으로 선택해서 검출 테스트**")
+    with col2:
+        if st.button("랜덤 이미지 생성", use_container_width=True):
+            # 랜덤 클래스 선택
+            random_class = random.choice(list(sample_images.keys()))
+            random_image = random.choice(sample_images[random_class])
+            
+            st.session_state.current_image_path = random_image
+            st.session_state.current_class = random_class
+            st.session_state.detection_done = False
+            st.rerun()
+    
+    # 현재 이미지 표시
+    if st.session_state.current_image_path:
+        st.markdown("---")
+        st.subheader("선택된 PCB 이미지")
+        
+        # 이미지 로드
+        img = Image.open(st.session_state.current_image_path)
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.image(img, caption=f"테스트 이미지 ({st.session_state.current_image_path.name})", 
+                    use_container_width=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div style="display: grid; gap: 8px;">
+                <div style="background: rgba(156, 39, 176, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(156, 39, 176, 0.1);">
+                    <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">실제 결함 유형</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{st.session_state.current_class}</div>
+                </div>
+                <div style="background: rgba(156, 39, 176, 0.05); padding: 8px; border-radius: 6px; border: 1px solid rgba(156, 39, 176, 0.1);">
+                    <div style="font-size: 0.7rem; color: #666; margin-bottom: 2px;">이미지 크기</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color: #333;">{img.size[0]} × {img.size[1]}</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # 검출 실행 버튼
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("YOLOv8 모델로 검출 실행", use_container_width=True):
+                st.session_state.detection_done = True
+                st.rerun()
+        
+        # 검출 결과 표시
+        if st.session_state.detection_done:
+            st.markdown("---")
+            st.subheader("검출 결과")
+            
+            # 두 모델로 시뮬레이션
+            detected_s, conf_s, img_s = simulate_detection(img, st.session_state.current_class, 'YOLOv8s')
+            detected_m, conf_m, img_m = simulate_detection(img, st.session_state.current_class, 'YOLOv8m')
+            
+            # 결과 표시
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.info("**실제 정답**")
+                st.success(f"{st.session_state.current_class}")
+            
+            with col2:
+                st.info("**YOLOv8 Small**")
+                if detected_s:
+                    is_correct = detected_s == st.session_state.current_class
+                    if is_correct:
+                        st.success(f"✓ {detected_s}")
+                        st.success(f"신뢰도: {conf_s:.1%}")
+                    else:
+                        st.error(f"✗ {detected_s}")
+                        st.error(f"신뢰도: {conf_s:.1%}")
+                else:
+                    st.error("검출 실패")
+                    st.error("신뢰도: 0%")
+            
+            with col3:
+                st.info("**YOLOv8 Medium**")
+                if detected_m:
+                    is_correct = detected_m == st.session_state.current_class
+                    if is_correct:
+                        st.success(f"✓ {detected_m}")
+                        st.success(f"신뢰도: {conf_m:.1%}")
+                    else:
+                        st.error(f"✗ {detected_m}")
+                        st.error(f"신뢰도: {conf_m:.1%}")
+                else:
+                    st.error("검출 실패")
+                    st.error("신뢰도: 0%")
+            
+            # 검출된 이미지 시각화
+            st.markdown("---")
+            st.subheader("검출 시각화 (Bounding Box)")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**YOLOv8 Small**")
+                st.image(img_s, use_container_width=True)
+            
+            with col2:
+                st.markdown("**YOLOv8 Medium**")
+                st.image(img_m, use_container_width=True)
+            
+            # 신뢰도 비교 차트
+            st.markdown("---")
+            st.subheader("모델별 신뢰도 비교")
+            
+            models = ['YOLOv8s', 'YOLOv8m']
+            confidences = [conf_s if detected_s else 0, conf_m if detected_m else 0]
+            correct = [
+                detected_s == st.session_state.current_class if detected_s else False,
+                detected_m == st.session_state.current_class if detected_m else False
+            ]
+            
+            colors = ['lightgreen' if c else 'lightcoral' for c in correct]
+            
+            fig = go.Figure()
+            
+            fig.add_trace(go.Bar(
+                x=models,
+                y=confidences,
+                marker_color=colors,
+                opacity=0.7,
+                text=[f'{conf:.1%}' for conf in confidences],
+                textposition='outside',
+                hovertemplate='<b>%{x}</b><br>신뢰도: %{y:.1%}<extra></extra>'
+            ))
+            
+            fig.update_layout(
+                title='검출 신뢰도 비교',
+                xaxis_title='모델',
+                yaxis_title='신뢰도',
+                yaxis=dict(range=[0, 1], tickformat='.0%'),
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # 정답 여부 요약
+            st.markdown("---")
+            correct_models = [m for m, c in zip(models, correct) if c]
+            
+            if len(correct_models) == 2:
+                st.success(f"**모든 모델이 정답!** ({', '.join(correct_models)})")
+            elif len(correct_models) == 1:
+                st.warning(f"**{correct_models[0]} 모델만 정답**")
+            else:
+                st.error("**모든 모델이 오답**")
+            
+            st.info("이 데모는 실제 YOLOv8 학습 결과의 Precision/Recall 기반으로 검출을 시뮬레이션합니다.")
+    
+    else:
+        st.info("**버튼을 클릭해서 랜덤 PCB 이미지 생성**")
