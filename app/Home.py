@@ -130,3 +130,36 @@ with col2:
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+col3, col4 = st.columns([1, 1], gap="medium")
+with col3:
+    st.markdown(f"""
+    <div class="industrial-card card-vision">
+        <div class="card-header">PCB 외관검사 자동화</div>
+        <div class="card-type type-vision">Computer Vision</div>
+        <div class="card-description">
+            <strong>목표</strong>: 딥러닝 기반 PCB 결함 실시간 검출 (AOI 시스템)<br>
+            <strong>핵심 역량</strong>
+            <ul>
+              <li>객체 검출: YOLOv8 활용한 실시간 결함 위치 특정</li>
+              <li>데이터 처리: XML→YOLO 변환, 이미지 정규화, 증강</li>
+              <li>모델 최적화: Small→Medium 비교, 정확도/속도 Trade-off</li>
+              <li>산업 적용: mAP 기반 성능 평가, 생산라인 배포 고려</li>
+            </ul>
+            <strong>주요 성과</strong>
+            <ul>
+              <li>mAP50: 90.3% · Precision: 93.9% · Recall: 82.5%</li>
+              <li>추론 속도: 4.9ms/이미지 (실시간 검사 가능)</li>
+              <li>치명적 결함 고검출: Missing_hole 96.6%, Short 95.6%</li>
+            </ul>
+            <strong>재현성·배포</strong>: Google Colab 학습 코드, 모델 파일(.pt), Streamlit 데모
+        </div>
+        <div class="performance-badge">mAP50 90.3% · 4.9ms 추론</div>
+        <div class="tech-stack">
+            <span class="tech-badge">YOLOv8</span>
+            <span class="tech-badge">PyTorch</span>
+            <span class="tech-badge">OpenCV</span>
+            <span class="tech-badge">Colab</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)

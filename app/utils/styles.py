@@ -132,6 +132,9 @@ def load_common_styles():
             background: linear-gradient(90deg, #4fd1c7 0%, #81e6d9 100%);
         }
         
+        .card-vision::before {
+            background: linear-gradient(90deg, #9C27B0 0%, #E91E63 100%);
+        }
         .card-header {
             font-size: 1.5rem;
             font-weight: 700;
@@ -160,6 +163,12 @@ def load_common_styles():
             color: #2c7a7b;
             border-color: rgba(79, 209, 199, 0.3);
         }
+                
+        .type-vision {
+            background: rgba(156, 39, 176, 0.1);
+            color: #7b1fa2;
+            border-color: rgba(156, 39, 176, 0.3);
+        }
         
         .card-description {
             color: #4a5568;
@@ -185,6 +194,11 @@ def load_common_styles():
         .card-dl .performance-badge {
             background: linear-gradient(135deg, #4fd1c7 0%, #319795 100%);
             box-shadow: 0 4px 15px rgba(79, 209, 199, 0.3);
+        }
+                
+        .card-vision .performance-badge {
+            background: linear-gradient(135deg, #9C27B0 0%, #7b1fa2 100%);
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
         }
         
         .tech-stack {
@@ -221,6 +235,17 @@ def load_common_styles():
         .card-dl .tech-badge:hover {
             background: rgba(79, 209, 199, 0.2);
             border-color: #4fd1c7;
+        }
+                
+                .card-vision .tech-badge {
+            background: rgba(156, 39, 176, 0.1);
+            color: #7b1fa2;
+            border: 1px solid rgba(156, 39, 176, 0.3);
+        }
+        
+        .card-vision .tech-badge:hover {
+            background: rgba(156, 39, 176, 0.2);
+            border-color: #9C27B0;
         }
         
         /* 섹션 컨테이너 */
