@@ -358,7 +358,7 @@ with tab2:
         fig = make_subplots(
             rows=2, cols=2,
             subplot_titles=['mAP50', 'mAP50-95', 'Precision', 'Recall'],
-            vertical_spacing=0.12,
+            vertical_spacing=0.25,
             horizontal_spacing=0.1
         )
         
