@@ -40,27 +40,16 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.join(current_dir, "..", "..")
 results_path = os.path.join(project_root, "project_vision", "researching", "results")
 
-print("results 폴더 존재:", os.path.exists(results_path))
-print("\n하위 폴더:")
-if os.path.exists(results_path):
-    for item in os.listdir(results_path):
-        print(f"  - {item}")
-        
-        # yolov8s_pcb 확인
-        s_path = os.path.join(results_path, "yolov8s_pcb", "results.csv")
-        print(f"    yolov8s CSV 존재: {os.path.exists(s_path)}")
-        
-        # yolov8m_pcb 확인
-        m_path = os.path.join(results_path, "yolov8m_pcb", "results.csv")
-        print(f"    yolov8m CSV 존재: {os.path.exists(m_path)}")
-        
 # 성능 결과 로드
 @st.cache_data
 def load_vision_results():
     try:
-        # CSV에서 성능 지표 로드
-        results_s = pd.read_csv(os.path.join(results_path, "yolov8s_pcb/results.csv"))
-        results_m = pd.read_csv(os.path.join(results_path, "yolov8m_pcb/results.csv"))
+        # 전역 변수 results_path 사용
+        csv_s_path = os.path.join(results_path, "yolov8s_pcb", "results.csv")
+        csv_m_path = os.path.join(results_path, "yolov8m_pcb", "results.csv")
+        
+        results_s = pd.read_csv(csv_s_path)
+        results_m = pd.read_csv(csv_m_path)
         
         # 최고 성능 추출
         best_s = results_s.loc[results_s['metrics/mAP50(B)'].idxmax()]
