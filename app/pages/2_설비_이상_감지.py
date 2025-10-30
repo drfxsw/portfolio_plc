@@ -70,8 +70,6 @@ def load_failure_results():
 # 결과 로드
 results_lstm, results_gru, results_cnn = load_failure_results()
 
-# 메인 타이틀
-st.title("설비 이상 감지 시스템")
 # 탭 생성
 tab1, tab2, tab3 = st.tabs(["프로젝트 정보", "성능 분석", "End-to-End 시스템"])
 
