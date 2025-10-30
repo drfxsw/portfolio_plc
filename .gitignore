@@ -5,6 +5,14 @@ data/
 *.pt
 *.pth
 
+# 학습 중간 파일 제외
+project_vision/results/**/weights/
+project_vision/results/**/train_batch*.jpg
+project_vision/results/**/args.yaml
+
+# 전처리된 데이터 (이미지파일이라 용량 큼)
+project_vision/processed_data/
+
 # 기타
 __pycache__/
 .ipynb_checkpoints/
